@@ -188,6 +188,7 @@ func eatEscOrOrd(p *Parser) (r rune, err error) {
 	return
 }
 
+// just for display EOF
 func show(r rune) string {
 	if r == 0 {
 		return "EOF"
