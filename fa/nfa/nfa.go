@@ -12,8 +12,16 @@ type NFA struct {
 	AcceptStates  StateSet
 }
 
-func New(ruleBook *RuleBook, currentStates StateSet, acceptStates StateSet) *NFA {
-	return &NFA{ruleBook, currentStates, acceptStates}
+func New(ruleBook *RuleBook, currentStates []int, acceptStates []int) *NFA {
+	cs := make(map[int]bool)
+	for _, s := range currentStates {
+		cs[s] = true
+	}
+	as := make(map[int]bool)
+	for _, s := range acceptStates {
+		as[s] = true
+	}
+	return &NFA{ruleBook, cs, as}
 }
 
 func (nfa *NFA) CurrentStates() StateSet {

@@ -12,8 +12,12 @@ type DFA struct {
 	AcceptStates StateSet
 }
 
-func New(ruleBook *RuleBook, currentState int, acceptStates StateSet) *DFA {
-	return &DFA{ruleBook, currentState, acceptStates}
+func New(ruleBook *RuleBook, startState int, acceptStates ...int) *DFA {
+	as := make(map[int]bool)
+	for _, s := range acceptStates {
+		as[s] = true
+	}
+	return &DFA{ruleBook, startState, as}
 }
 
 func (dfa *DFA) CanAccept() bool {
