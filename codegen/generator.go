@@ -7,25 +7,25 @@ import (
 )
 
 type Generator interface {
-	Generate(writer io.Writer, lxs []*Lexer)
+	Generate(writer io.Writer, dfas []*NamedDFA)
 }
 
-func Gen(g Generator, filename string, lxs []*Lexer) (err error) {
+func Gen(g Generator, filename string, dfas []*NamedDFA) (err error) {
 	err = os.Mkdir("lexer", 0755)
 	if err != nil {
 		return
 	}
 
 	var f *os.File
-	f, err = os.OpenFile("lexer\\"+filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	f, err = os.OpenFile("lexer/"+filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return
 	}
-	g.Generate(f, lxs)
+	g.Generate(f, dfas)
 	return
 }
 
-type Lexer struct {
+type NamedDFA struct {
 	Name string
 	DFA  *dfa.DFA
 }

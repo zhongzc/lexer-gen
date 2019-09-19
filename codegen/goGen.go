@@ -10,13 +10,13 @@ import (
 
 type GoGen struct{}
 
-func (*GoGen) Generate(writer io.Writer, lxs []*Lexer) {
+func (*GoGen) Generate(writer io.Writer, dfas []*NamedDFA) {
 	mustWrite(writer, header)
 	mustWrite(writer, charReader)
 	mustWrite(writer, token)
 
 	var nameBuf bytes.Buffer
-	for _, lx := range lxs {
+	for _, lx := range dfas {
 		nameBuf.WriteString(fmt.Sprintf(
 			"\n\t\t\t\"%s\": &%s{},", lx.Name, lx.Name,
 		))
@@ -24,18 +24,18 @@ func (*GoGen) Generate(writer io.Writer, lxs []*Lexer) {
 	mustWrite(writer, fmt.Sprintf(lexer, nameBuf.String()))
 
 	mustWrite(writer, automata)
-	for _, lx := range lxs {
+	for _, lx := range dfas {
 		c := buildLexerCode(lx)
 		mustWrite(writer, c)
 	}
 }
 
-func buildLexerCode(lexer *Lexer) string {
+func buildLexerCode(dfa *NamedDFA) string {
 	var buf bytes.Buffer
-	buf.WriteString("\ntype " + lexer.Name + " struct{}")
+	buf.WriteString("\ntype " + dfa.Name + " struct{}")
 
 	ruleFromState := make(map[int][]*fa.Rule)
-	for _, r := range lexer.DFA.RuleBook.Rules {
+	for _, r := range dfa.DFA.RuleBook.Rules {
 		ruleFromState[r.From] = append(ruleFromState[r.From], r)
 	}
 
@@ -53,14 +53,14 @@ func buildLexerCode(lexer *Lexer) string {
 	}
 
 	var acceptStates bytes.Buffer
-	for k := range lexer.DFA.AcceptStates {
+	for k := range dfa.DFA.AcceptStates {
 		acceptStates.WriteString(fmt.Sprintf("\t\t%d: true,", k))
 	}
 
 	buf.WriteString(fmt.Sprintf(
 		automataTemplate,
-		lexer.Name,
-		lexer.DFA.CurrentState,
+		dfa.Name,
+		dfa.DFA.CurrentState,
 		acceptStates.String(),
 		stateTransfers.String(),
 	))
@@ -140,21 +140,21 @@ type Token struct {
 	//     []name,
 	// )
 	lexer = `
-// Lexer
-type Lexer struct {
+// NamedDFA
+type NamedDFA struct {
 	Chars     CharIterator
 	automatas map[string]Automata
 }
 
-func NewLexer(chars CharIterator) *Lexer {
-	return &Lexer{
+func NewLexer(chars CharIterator) *NamedDFA {
+	return &NamedDFA{
 		Chars: chars,
 		automatas: map[string]Automata{%s
 		},
 	}
 }
 
-func (l *Lexer) NextToken() (t *Token, err error) {
+func (l *NamedDFA) NextToken() (t *Token, err error) {
 	if l.Chars.NextChar() == 0 {
 		return nil, errors.New("reach EOF")
 	}

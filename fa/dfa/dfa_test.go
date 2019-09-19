@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
-var rb *RuleBook
+var rb *fa.RuleBook
 
 func init() {
-	rb = &RuleBook{Rules: []*fa.Rule{
+	rb = &fa.RuleBook{Rules: []*fa.Rule{
 		{1, 'a', 2},
 		{1, 'b', 1},
 		{2, 'a', 2},
@@ -21,28 +21,28 @@ func init() {
 func TestRuleBook_NextState(t *testing.T) {
 	var s int
 	var err error
-	s, err = rb.nextState(1, 'a')
+	s, err = rb.NextState(1, 'a')
 	if err != nil {
-		t.Fatalf("rb.nextState() failed: %s", err)
+		t.Fatalf("rb.NextState() failed: %s", err)
 	}
 	if s != 2 {
-		t.Errorf("rb.nextState() expected %d, got %d", 2, s)
+		t.Errorf("rb.NextState() expected %d, got %d", 2, s)
 	}
 
-	s, err = rb.nextState(1, 'b')
+	s, err = rb.NextState(1, 'b')
 	if err != nil {
-		t.Fatalf("rb.nextState() failed: %s", err)
+		t.Fatalf("rb.NextState() failed: %s", err)
 	}
 	if s != 1 {
-		t.Errorf("rb.nextState() expected %d, got %d", 1, s)
+		t.Errorf("rb.NextState() expected %d, got %d", 1, s)
 	}
 
-	s, err = rb.nextState(2, 'b')
+	s, err = rb.NextState(2, 'b')
 	if err != nil {
-		t.Fatalf("rb.nextState() failed: %s", err)
+		t.Fatalf("rb.NextState() failed: %s", err)
 	}
 	if s != 3 {
-		t.Errorf("rb.nextState() expected %d, got %d", 2, s)
+		t.Errorf("rb.NextState() expected %d, got %d", 2, s)
 	}
 }
 
