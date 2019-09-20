@@ -5,10 +5,18 @@ import (
 )
 
 func TestLexer(t *testing.T) {
-	cs := NewStream("baaab")
-	am := &A{}
-	err := am.RunGreedy(cs)
-	if err != nil {
-		t.Fatalf(err.Error())
+	cs := NewStream(`
+abdog
+abcatcat
+abccc
+`)
+	l := NewLexer(cs)
+	for l.HasNext() {
+		tk, err := l.NextToken()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log(tk)
 	}
 }

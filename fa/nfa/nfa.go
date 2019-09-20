@@ -14,6 +14,16 @@ func New(ruleBook *RuleBook, currentStates StateSet, acceptStates StateSet) *NFA
 	return &NFA{ruleBook, currentStates, acceptStates}
 }
 
+func (nfa *NFA) Match(input string) bool {
+	old := nfa.currentStates.Copy()
+	defer func() { nfa.currentStates = old }()
+	err := nfa.ReadString(input)
+	if err != nil || !nfa.CanAccept() {
+		return false
+	}
+	return true
+}
+
 func (nfa *NFA) CurrentStates() StateSet {
 	return nfa.RuleBook.FreeMove(nfa.currentStates)
 }

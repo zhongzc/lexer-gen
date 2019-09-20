@@ -39,3 +39,11 @@ func (ss StateSet) LE(o StateSet) bool {
 	}
 	return true
 }
+
+func (ss StateSet) Copy() (res StateSet) {
+	res = make(map[int]bool)
+	for k := range ss {
+		res[k] = true
+	}
+	return
+}
