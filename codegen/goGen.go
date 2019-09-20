@@ -25,7 +25,7 @@ func (*GoGen) Generate(dfas []*NamedDFA) map[string]func(io.Writer) error {
 		var nameBuf bytes.Buffer
 		for _, lx := range dfas {
 			nameBuf.WriteString(fmt.Sprintf(
-				"\n\t\t\t\"%s\": &%s{},", lx.Name, lx.Name,
+				"\n\t\t\t{\"%s\", &%s{}},", lx.Name, lx.Name,
 			))
 		}
 		_, err = io.WriteString(writer, fmt.Sprintf(lexer, nameBuf.String()))
@@ -200,13 +200,19 @@ type Token struct {
 // Lexer
 type Lexer struct {
 	Chars     CharIterator
-	automatas map[string]Automata
+	automatas []struct{
+		Name string
+		Automata Automata
+	}
 }
 
 func NewLexer(chars CharIterator) *Lexer {
 	return &Lexer{
 		Chars: chars,
-		automatas: map[string]Automata{%s
+		automatas: []struct{
+			Name string
+			Automata Automata
+		}{%s
 		},
 	}
 }
@@ -218,15 +224,15 @@ func (l *Lexer) NextToken() (t *Token, err error) {
 	l.skipWhitespace()
 	idx := l.Chars.CurrentIndex()
 
-	for k, a := range l.automatas {
-		err = a.RunGreedy(l.Chars)
+	for _, a := range l.automatas {
+		err = a.Automata.RunGreedy(l.Chars)
 		if err != nil {
 			l.Chars.SetIndex(idx)
 		} else {
 			var tv = l.Chars.SubString(idx, l.Chars.CurrentIndex())
 			idx = l.Chars.CurrentIndex()
 
-			t = &Token{TokenType(k), TokenValue(tv)}
+			t = &Token{TokenType(a.Name), TokenValue(tv)}
 			err = nil
 			break
 		}
@@ -316,12 +322,12 @@ import (
 
 func TestLexer(t *testing.T) {
 	cs := NewStream(` + "`" +`
-xxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxx
+if (a_for_apple == 10000) {
+	var b_for_ball = 10086;
+	return b_for_banana;
+} else {
+	return 0;
+}
 ` + "`" +
 		`)
 	l := NewLexer(cs)

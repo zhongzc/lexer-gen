@@ -7,12 +7,12 @@ import (
 )
 
 func main() {
-	file, err := os.Open("tmp.lx")
+	file, err := os.Open("example/tmp.lx")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-	err = ruledef.BuildAll(file, "lexertmp", codegen.NewGoGen())
+	err = ruledef.BuildAll(file, "example/_tmpLexer", codegen.NewGoGen())
 	if err != nil {
 		panic(err)
 	}
