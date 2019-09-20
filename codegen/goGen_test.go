@@ -18,7 +18,7 @@ func TestName(t *testing.T) {
 	}}
 	d := dfa.New(rb, 1, fa.NewSet(3))
 
-	err := Gen(&GoGen{}, "lexer.go", []*NamedDFA{
+	err := Gen(&GoGen{}, "lexer", []*NamedDFA{
 		{Name: "A", DFA: d},
 		{Name: "B", DFA: d},
 	})

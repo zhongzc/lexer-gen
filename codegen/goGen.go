@@ -9,6 +9,10 @@ import (
 
 type GoGen struct{}
 
+func NewGoGen() *GoGen {
+	return &GoGen{}
+}
+
 func (*GoGen) Generate(dfas []*NamedDFA) map[string]func(io.Writer) error {
 	res := make(map[string]func(io.Writer) error)
 
