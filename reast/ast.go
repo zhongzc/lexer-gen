@@ -1,7 +1,6 @@
 package reast
 
 import (
-	"bytes"
 	"fmt"
 )
 
@@ -17,22 +16,16 @@ type RegEx interface {
 //   Matches one of regular expression in `RegExs`;
 //   It represents "r0|r1|r2|...|rn"
 type Choose struct {
-	RegExs []RegEx
+	Left  RegEx
+	Right RegEx
+}
+
+func NewChoose(left RegEx, right RegEx) *Choose {
+	return &Choose{Left: left, Right: right}
 }
 
 func (c *Choose) REString() string {
-	if len(c.RegExs) == 0 {
-		return ""
-	}
-	var buf bytes.Buffer
-	buf.WriteString("(")
-	buf.WriteString(c.RegExs[0].REString())
-	for _, cc := range c.RegExs[1:] {
-		buf.WriteString("|")
-		buf.WriteString(cc.REString())
-	}
-	buf.WriteString(")")
-	return buf.String()
+	return "(" + c.Left.REString() + "|" + c.Right.REString() + ")"
 }
 
 // Repeat :
@@ -41,6 +34,10 @@ func (c *Choose) REString() string {
 //   It represents "r*"
 type Repeat struct {
 	RegEx RegEx
+}
+
+func NewRepeat(regEx RegEx) *Repeat {
+	return &Repeat{RegEx: regEx}
 }
 
 func (r *Repeat) REString() string {
@@ -52,23 +49,32 @@ func (r *Repeat) REString() string {
 //   in `RegExs`;
 //   It represents "r1r2r3...rn"
 type Sequence struct {
-	RegExs []RegEx
+	Left  RegEx
+	Right RegEx
 }
 
-func (c *Sequence) REString() string {
-	var buf bytes.Buffer
-	for _, g := range c.RegExs {
-		buf.WriteString(g.REString())
-	}
-	return buf.String()
+func NewSequence(left RegEx, right RegEx) *Sequence {
+	return &Sequence{Left: left, Right: right}
+}
+
+func (s *Sequence) REString() string {
+	return s.Left.REString() + s.Right.REString()
 }
 
 // Primitive :
 //   Matches a utf-8 character equals to `Rune`
 type Primitive struct {
-	Rune rune
+	From  rune
+	Limit int32
+}
+
+func NewPrimitive(from rune, limit int32) *Primitive {
+	return &Primitive{From: from, Limit: limit}
 }
 
 func (l *Primitive) REString() string {
-	return string(l.Rune)
+	if l.Limit == 0 {
+		return string(l.From)
+	}
+	return fmt.Sprintf("%c-%c", l.From, l.From+l.Limit)
 }

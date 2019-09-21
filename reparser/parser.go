@@ -38,67 +38,53 @@ func (p *Parser) eat(r rune) error {
 }
 
 // regex := <term> '|' <regex> | <term>
-func (p *Parser) regex() (re RegEx, err error) {
-	var t RegEx
-	t, err = p.term()
+func (p *Parser) regex() (RegEx, error) {
+	t, err := p.term()
 	if err != nil {
-		return
+		return nil, errors.New("p.regex() expected a term\n" + err.Error())
 	}
 
-	c := &Choose{RegExs: []RegEx{t}}
-	for ; p.peek() == '|'; {
+	if p.peek() == '|' {
 		_ = p.eat('|')
-		t, err = p.term()
+		r, err := p.regex()
 		if err != nil {
-			return
+			return nil, errors.New("p.regex() expected a regex\n" + err.Error())
 		}
-		c.RegExs = append(c.RegExs, t)
-	}
-	if len(c.RegExs) == 1 {
-		re = c.RegExs[0]
+		return NewChoose(t, r), nil
 	} else {
-		re = c
+		return t, nil
 	}
-	return
 }
 
 // term := <factor> <term> | <factor>
-func (p *Parser) term() (re RegEx, err error) {
+func (p *Parser) term() (RegEx, error) {
 	var f RegEx
-	f, err = p.factor()
+	f, err := p.factor()
 	if err != nil {
-		return
+		return nil, errors.New("p.term() expected a factor\n" + err.Error())
 	}
 
-	s := &Sequence{RegExs: []RegEx{f}}
-	for ; p.peek() != 0 && p.peek() != ')' && p.peek() != '|'; {
-		f, err = p.factor()
+	if p.peek() != 0 && p.peek() != ')' && p.peek() != '|' {
+		r, err := p.term()
 		if err != nil {
-			return
+			return nil, errors.New("p.term() expected a term\n" + err.Error())
 		}
-
-		s.RegExs = append(s.RegExs, f)
-	}
-
-	if len(s.RegExs) == 1 {
-		re = s.RegExs[0]
+		return NewSequence(f, r), nil
 	} else {
-		re = s
+		return f, nil
 	}
-	return
 }
 
 // factor := <base> | <base> '*'
-func (p *Parser) factor() (re RegEx, err error) {
-	var b RegEx
-	b, err = p.base()
+func (p *Parser) factor() (RegEx, error) {
+	b, err := p.base()
 	if err != nil {
-		return
+		return nil, errors.New("p.factor() expected a base\n" + err.Error())
 	}
 
 	if p.peek() == '*' {
 		_ = p.eat('*')
-		b = &Repeat{RegEx: b}
+		b = NewRepeat(b)
 	}
 	return b, nil
 }
@@ -106,29 +92,35 @@ func (p *Parser) factor() (re RegEx, err error) {
 // base := '('   <regex>  )'  |
 //         '[' <charsets> ']' |
 //         <primitive>
-func (p *Parser) base() (re RegEx, err error) {
+func (p *Parser) base() (RegEx, error) {
 	switch p.peek() {
 	case '(':
 		_ = p.eat('(')
-		re, err = p.regex()
+		re, err := p.regex()
 		if err != nil {
-			return
+			return nil, errors.New("p.base() expected a regex\n" + err.Error())
 		}
 		err = p.eat(')')
-		return
+		if err != nil {
+			return nil, err
+		}
+		return re, nil
 	case '\\':
 		_ = p.eat('\\')
 		c := p.peek()
 		_ = p.eat(c)
-		return &Primitive{Rune: c}, nil
+		return NewPrimitive(c, 0), nil
 	case '[':
 		_ = p.eat('[')
-		re, err = p.charsets()
+		re, err := p.charsets()
 		if err != nil {
-			return
+			return nil, errors.New("p.base() expected a charsets\n" + err.Error())
 		}
 		err = p.eat(']')
-		return
+		if err != nil {
+			return nil, err
+		}
+		return re, nil
 	default:
 		c := p.peek()
 		if c == 0 {
@@ -137,7 +129,7 @@ func (p *Parser) base() (re RegEx, err error) {
 			return nil, errors.New(fmt.Sprintf("expected: \\%s, but got %s", show(c), show(c)))
 		}
 		_ = p.eat(c)
-		return &Primitive{Rune: c}, nil
+		return NewPrimitive(c, 0), nil
 	}
 }
 
@@ -145,33 +137,37 @@ func (p *Parser) base() (re RegEx, err error) {
 //             <primitive> '-' <primitive>            |
 //             <primitive>                 <charsets> |
 //             <primitive>                            |
-func (p *Parser) charsets() (re RegEx, err error) {
-	res := make([]RegEx, 0)
-
+func (p *Parser) charsets() (res RegEx, err error) {
 	for ; p.peek() != ']'; {
 		var f rune
 		var t rune
 
 		f, err = eatEscOrOrd(p)
 		if err != nil {
-			return
+			return nil, errors.New("p.charsets(): failed\n" + err.Error())
 		}
 		if p.peek() == '-' {
 			_ = p.eat('-')
 			t, err = eatEscOrOrd(p)
 			if err != nil {
-				return
+				return nil, errors.New("p.charsets(): failed\n" + err.Error())
 			}
 		} else {
 			t = f
 		}
 
-		for i := f; i <= t; i++ {
-			res = append(res, &Primitive{Rune: i})
+		if f <= t {
+			if res == nil {
+				res = NewPrimitive(f, t-f)
+			} else {
+				res = NewChoose(res, NewPrimitive(f, t-f))
+			}
+		} else {
+			return nil, errors.New("p.charsets(): rhs can not be greater than lhs")
 		}
 	}
 
-	return &Choose{RegExs: res}, nil
+	return
 }
 
 // primitive := '\' . | .
