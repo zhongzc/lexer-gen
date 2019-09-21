@@ -4,13 +4,13 @@ import "testing"
 
 func TestString(t *testing.T) {
 	ast := NewChoose(NewChoose(
-		NewRepeat(NewSequence(NewPrimitive('c', 0),
-			NewSequence(NewPrimitive('a', 0),
-				NewPrimitive('t', 0)))),
+		NewRepeat(NewSequence(NewPrimitive('c', 'c'),
+			NewSequence(NewPrimitive('a', 'a'),
+				NewPrimitive('t', 't')))),
 		NewSequence(
-			NewRepeat(NewPrimitive('a', 0)),
-			NewPrimitive('b', 0))),
-		NewPrimitive('c', 0))
+			NewRepeat(NewPrimitive('a', 'a')),
+			NewPrimitive('b', 'b'))),
+		NewPrimitive('c', 'c'))
 
 	expected := "(((cat)*|(a)*b)|c)"
 	if ast.REString() != expected {

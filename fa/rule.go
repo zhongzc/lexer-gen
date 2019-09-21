@@ -7,12 +7,21 @@ import (
 
 type Rule struct {
 	From int
-	By   rune
+	By   Charset
 	To   int
 }
 
-func (r *Rule) Apply(from int, by rune) (next int, ok bool) {
-	if r.From == from && r.By == by {
+func NewRule(from int, by Charset, to int) *Rule {
+	return &Rule{From: from, By: by, To: to}
+}
+
+type Charset struct {
+	LeftMost  rune
+	RightMost rune
+}
+
+func (r *Rule) Apply(from int, by Charset) (next int, ok bool) {
+	if r.From == from && r.By.LeftMost <= by.LeftMost && by.RightMost <= r.By.RightMost {
 		return r.To, true
 	} else {
 		return -1, false
@@ -23,16 +32,16 @@ type RuleBook struct {
 	Rules []*Rule
 }
 
-func (rb *RuleBook) Alphabet() (a map[rune]bool) {
-	a = make(map[rune]bool)
+func (rb *RuleBook) Alphabet() (a map[Charset]bool) {
+	a = make(map[Charset]bool)
 	for _, r := range rb.Rules {
 		a[r.By] = true
 	}
-	delete(a, 0)
+	delete(a, Charset{0, 0})
 	return
 }
 
-func (rb *RuleBook) NextState(state int, by rune) (nextState int, err error) {
+func (rb *RuleBook) NextState(state int, by Charset) (nextState int, err error) {
 	for _, r := range rb.Rules {
 		if next, ok := r.Apply(state, by); ok {
 			return next, nil
@@ -42,12 +51,12 @@ func (rb *RuleBook) NextState(state int, by rune) (nextState int, err error) {
 	return -1, errors.New(msg)
 }
 
-func (rb *RuleBook) NextStates(ss StateSet, by rune) (nextStateSet StateSet, err error) {
+func (rb *RuleBook) NextStates(ss StateSet, by Charset) (nextStateSet StateSet, err error) {
 	nextStateSet = make(map[int]bool)
 	for _, r := range rb.Rules {
 		if ss[r.From] {
-			if r.By == by {
-				nextStateSet[r.To] = true
+			if next, ok := r.Apply(r.From, by); ok {
+				nextStateSet[next] = true
 			}
 		}
 	}
@@ -59,7 +68,7 @@ func (rb *RuleBook) NextStates(ss StateSet, by rune) (nextStateSet StateSet, err
 }
 
 func (rb *RuleBook) FreeMove(ss StateSet) StateSet {
-	more, _ := rb.NextStates(ss, 0)
+	more, _ := rb.NextStates(ss, Charset{0, 0})
 	if more.LE(ss) {
 		return ss
 	} else {

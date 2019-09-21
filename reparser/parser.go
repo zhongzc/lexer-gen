@@ -109,7 +109,7 @@ func (p *Parser) base() (RegEx, error) {
 		_ = p.eat('\\')
 		c := p.peek()
 		_ = p.eat(c)
-		return NewPrimitive(c, 0), nil
+		return NewPrimitive(c, c), nil
 	case '[':
 		_ = p.eat('[')
 		re, err := p.charsets()
@@ -129,7 +129,7 @@ func (p *Parser) base() (RegEx, error) {
 			return nil, errors.New(fmt.Sprintf("expected: \\%s, but got %s", show(c), show(c)))
 		}
 		_ = p.eat(c)
-		return NewPrimitive(c, 0), nil
+		return NewPrimitive(c, c), nil
 	}
 }
 
@@ -158,9 +158,9 @@ func (p *Parser) charsets() (res RegEx, err error) {
 
 		if f <= t {
 			if res == nil {
-				res = NewPrimitive(f, t-f)
+				res = NewPrimitive(f, t)
 			} else {
-				res = NewChoose(res, NewPrimitive(f, t-f))
+				res = NewChoose(res, NewPrimitive(f, t))
 			}
 		} else {
 			return nil, errors.New("p.charsets(): rhs can not be greater than lhs")

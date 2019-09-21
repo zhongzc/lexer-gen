@@ -64,17 +64,17 @@ func (s *Sequence) REString() string {
 // Primitive :
 //   Matches a utf-8 character equals to `Rune`
 type Primitive struct {
-	From  rune
-	Limit int32
+	From rune
+	To   rune
 }
 
-func NewPrimitive(from rune, limit int32) *Primitive {
-	return &Primitive{From: from, Limit: limit}
+func NewPrimitive(from rune, to rune) *Primitive {
+	return &Primitive{From: from, To: to}
 }
 
 func (l *Primitive) REString() string {
-	if l.Limit == 0 {
+	if l.To == l.From {
 		return string(l.From)
 	}
-	return fmt.Sprintf("%c-%c", l.From, l.From+l.Limit)
+	return fmt.Sprintf("%c-%c", l.From, l.To)
 }
