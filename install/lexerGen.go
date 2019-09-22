@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	f := flag.String("i", "", "input rules file")
-	p := flag.String("o", "lexer", "output path")
-	n := flag.String("go", "", "generate go code, need specify package name")
+	f := flag.String("i", "", "the input rule file")
+	p := flag.String("o", "lexer", "the output path")
+	n := flag.String("go", "", "generate golang code, need specify package name")
 	flag.Parse()
 
 	if *f == "" {
