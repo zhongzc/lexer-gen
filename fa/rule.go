@@ -3,6 +3,7 @@ package fa
 import (
 	"errors"
 	"fmt"
+	"sort"
 )
 
 type Rule struct {
@@ -20,6 +21,13 @@ type Charset struct {
 	RightMost rune
 }
 
+func Free() Charset {
+	return Charset{0, 0}
+}
+func OneChar(c rune) Charset {
+	return Charset{c, c}
+}
+
 func (r *Rule) Apply(from int, by Charset) (next int, ok bool) {
 	if r.From == from && r.By.LeftMost <= by.LeftMost && by.RightMost <= r.By.RightMost {
 		return r.To, true
@@ -32,12 +40,41 @@ type RuleBook struct {
 	Rules []*Rule
 }
 
+func NewRuleBook(rules []*Rule) *RuleBook {
+	splitPoints := make(map[rune]bool)
+	for _, r := range rules {
+		splitPoints[r.By.LeftMost] = true
+		splitPoints[r.By.RightMost] = true
+	}
+	ordered := make([]int, 0, len(splitPoints))
+	for p := range splitPoints {
+		ordered = append(ordered, int(p))
+	}
+	sort.Ints(ordered)
+
+	newRB := make([]*Rule, 0, len(rules))
+	for _, r := range rules {
+		lt := sort.SearchInts(ordered, int(r.By.LeftMost))
+		rt := sort.SearchInts(ordered, int(r.By.RightMost))
+		if lt == rt || lt+1 == rt {
+			newRB = append(newRB, r)
+			continue
+		}
+		for i := lt; i <= rt; i++ {
+			cs := Charset{rune(ordered[i]), rune(ordered[i+1])}
+			newRule := NewRule(r.From, cs, r.To)
+			newRB = append(newRB, newRule)
+		}
+	}
+	return &RuleBook{Rules: newRB}
+}
+
 func (rb *RuleBook) Alphabet() (a map[Charset]bool) {
 	a = make(map[Charset]bool)
 	for _, r := range rb.Rules {
 		a[r.By] = true
 	}
-	delete(a, Charset{0, 0})
+	delete(a, Free())
 	return
 }
 
@@ -68,7 +105,7 @@ func (rb *RuleBook) NextStates(ss StateSet, by Charset) (nextStateSet StateSet, 
 }
 
 func (rb *RuleBook) FreeMove(ss StateSet) StateSet {
-	more, _ := rb.NextStates(ss, Charset{0, 0})
+	more, _ := rb.NextStates(ss, Free())
 	if more.LE(ss) {
 		return ss
 	} else {

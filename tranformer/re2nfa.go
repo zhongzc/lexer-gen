@@ -4,7 +4,6 @@ import (
 	"github.com/zhongzc/lexerGen/fa"
 	"github.com/zhongzc/lexerGen/fa/nfa"
 	"github.com/zhongzc/lexerGen/reast"
-	"log"
 )
 
 func ToNFA(re reast.RegEx) *nfa.NFA {
@@ -29,49 +28,43 @@ func toNFA(re reast.RegEx, ig *IdGenerator) *nfa.NFA {
 func primitiveToNFA(l *reast.Primitive, ig *IdGenerator) *nfa.NFA {
 	startState := ig.NextId()
 	acceptState := ig.NextId()
-	rule := &fa.Rule{From: startState, By: l.Rune, To: acceptState}
-	rb := &fa.RuleBook{Rules: []*fa.Rule{rule}}
+	rule := &fa.Rule{From: startState, By: fa.Charset{LeftMost: l.From, RightMost: l.To}, To: acceptState}
+	rb := fa.NewRuleBook([]*fa.Rule{rule})
 	return nfa.New(rb, fa.NewSet(startState), fa.NewSet(acceptState))
 }
 
 func sequenceToNFA(s *reast.Sequence, ig *IdGenerator) *nfa.NFA {
-	cur := toNFA(s.RegExs[0], ig)
+	cur := toNFA(s.Left, ig)
 	startState := cur.CurrentStates()
-
 	rules := cur.RuleBook.Rules
-	var next *nfa.NFA
-	for _, re := range s.RegExs[1:] {
-		next = toNFA(re, ig)
-		rules = append(rules, next.RuleBook.Rules...)
-		for a := range cur.AcceptStates {
-			for s := range next.CurrentStates() {
-				rules = append(rules, &fa.Rule{From: a, By: 0, To: s})
-			}
+	next := toNFA(s.Right, ig)
+	rules = append(rules, next.RuleBook.Rules...)
+	for a := range cur.AcceptStates {
+		for s := range next.CurrentStates() {
+			rules = append(rules, fa.NewRule(a, fa.Free(), s))
 		}
-		cur = next
-	}
-	if next == nil {
-		log.Fatalf("reast.Sequence.RegExs length should greater than 1")
 	}
 	acceptStates := next.AcceptStates
-	return nfa.New(&fa.RuleBook{Rules: rules}, startState, acceptStates)
+	return nfa.New(fa.NewRuleBook(rules), startState, acceptStates)
 }
 
 func chooseToNFA(c *reast.Choose, ig *IdGenerator) *nfa.NFA {
 	startState := ig.NextId()
-
-	rules := make([]*fa.Rule, 0)
 	acceptStates := fa.NewSet()
-	for _, re := range c.RegExs {
-		n := toNFA(re, ig)
-		acceptStates.Add(n.AcceptStates)
-		rules = append(rules, n.RuleBook.Rules...)
-		for k := range n.CurrentStates() {
-			rules = append(rules, &fa.Rule{From: startState, By: 0, To: k})
-		}
+
+	c1 := toNFA(c.Left, ig)
+	acceptStates.Add(c1.AcceptStates)
+	c2 := toNFA(c.Right, ig)
+	acceptStates.Add(c2.AcceptStates)
+	rules := append(c1.RuleBook.Rules, c2.RuleBook.Rules...)
+	for k := range c1.CurrentStates() {
+		rules = append(rules, fa.NewRule(startState, fa.Free(), k))
+	}
+	for k := range c2.CurrentStates() {
+		rules = append(rules, fa.NewRule(startState, fa.Free(), k))
 	}
 
-	rb := &fa.RuleBook{Rules: rules}
+	rb := fa.NewRuleBook(rules)
 	return nfa.New(rb, fa.NewSet(startState), acceptStates)
 }
 
@@ -84,12 +77,12 @@ func repeatToNFA(r *reast.Repeat, ig *IdGenerator) *nfa.NFA {
 	rules := a.RuleBook.Rules
 	for sta := range a.CurrentStates() {
 		for acc := range a.AcceptStates {
-			rules = append(rules, &fa.Rule{From: acc, By: 0, To: sta})
+			rules = append(rules, fa.NewRule(acc, fa.Free(), sta))
 		}
-		rules = append(rules, &fa.Rule{From: startState, By: 0, To: sta})
+		rules = append(rules, fa.NewRule(startState, fa.Free(), sta))
 	}
 
-	rb := &fa.RuleBook{Rules: rules}
+	rb := fa.NewRuleBook(rules)
 	return nfa.New(rb, fa.NewSet(startState), acceptStates)
 }
 

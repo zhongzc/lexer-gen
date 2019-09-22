@@ -13,7 +13,7 @@ func ToDFA(nfa *nfa.NFA) *dfa.DFA {
 
 type SRule struct {
 	From fa.StateSet
-	By   rune
+	By   fa.Charset
 	To   fa.StateSet
 }
 type NFASimulation struct {
@@ -37,8 +37,8 @@ func (ns *NFASimulation) ToDFA() *dfa.DFA {
 	// buildRules
 	var rules []*fa.Rule
 	for _, r := range rs {
-		rules = append(rules,
-			&fa.Rule{From: findIdx(r.From), By: r.By, To: findIdx(r.To)})
+		rule := fa.NewRule(findIdx(r.From), r.By,  findIdx(r.To))
+		rules = append(rules, rule)
 	}
 
 	// buildAcceptStates
@@ -49,13 +49,13 @@ func (ns *NFASimulation) ToDFA() *dfa.DFA {
 		}
 	}
 
-	return dfa.New(&fa.RuleBook{Rules: rules}, startState, fa.NewSet(acceptStates...))
+	return dfa.New(fa.NewRuleBook(rules), startState, fa.NewSet(acceptStates...))
 }
 
-func (ns *NFASimulation) NextState(from fa.StateSet, by rune) fa.StateSet {
+func (ns *NFASimulation) NextState(from fa.StateSet, by fa.Charset) fa.StateSet {
 	n := nfa.New(ns.NFA.RuleBook, from, fa.NewSet())
 
-	_ = n.ReadChar(by)
+	_ = n.ReadCharset(by)
 	return n.CurrentStates()
 }
 

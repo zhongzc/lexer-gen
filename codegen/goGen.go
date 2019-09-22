@@ -13,11 +13,19 @@ func NewGoGen() *GoGen {
 	return &GoGen{}
 }
 
-func (*GoGen) Generate(dfas []*NamedDFA) map[string]func(io.Writer) error {
+func (*GoGen) Generate(packageName string, dfas []*NamedDFA) map[string]func(io.Writer) error {
 	res := make(map[string]func(io.Writer) error)
+	res["lexer.go"] = genLexer(packageName, dfas)
+	res["charIterator.go"] = genCharIterator(packageName)
+	res["automata.go"] = genAutomata(packageName, dfas)
+	res["lexer_test.go"] = genTest(packageName)
+	return res
+}
 
-	res["lexer.go"] = func(writer io.Writer) (err error) {
-		_, err = io.WriteString(writer, lexerHeader)
+// GenLexer
+func genLexer(packageName string, dfas []*NamedDFA) func(io.Writer) error {
+	return func(writer io.Writer) (err error) {
+		_, err = io.WriteString(writer, fmt.Sprintf(lexerHeader, packageName))
 		if err != nil {
 			return
 		}
@@ -39,160 +47,14 @@ func (*GoGen) Generate(dfas []*NamedDFA) map[string]func(io.Writer) error {
 		}
 		return
 	}
-
-	res["charIterator.go"] = func(writer io.Writer) (err error) {
-		_, err = io.WriteString(writer, charIterHeader)
-		if err != nil {
-			return
-		}
-
-		_, err = io.WriteString(writer, charReader)
-		return
-	}
-
-	res["automata.go"] = func(writer io.Writer) (err error) {
-		_, err = io.WriteString(writer, automataHeader)
-		if err != nil {
-			return
-		}
-
-		_, err = io.WriteString(writer, automata)
-		if err != nil {
-			return
-		}
-
-		for _, lx := range dfas {
-			c := buildLexerCode(lx)
-			_, err = io.WriteString(writer, c)
-			if err != nil {
-				return
-			}
-		}
-		return
-	}
-
-	res["lexer_test.go"] = func(writer io.Writer) (err error) {
-		_, err = io.WriteString(writer, testTemplate)
-		return
-	}
-
-	return res
 }
-
-func buildLexerCode(dfa *NamedDFA) string {
-	var buf bytes.Buffer
-	buf.WriteString("\ntype " + dfa.Name + " struct{}")
-
-	ruleFromState := make(map[int][]*fa.Rule)
-	for _, r := range dfa.DFA.RuleBook.Rules {
-		ruleFromState[r.From] = append(ruleFromState[r.From], r)
-	}
-
-	var stateTransfers bytes.Buffer
-	for from, transfer := range ruleFromState {
-		var transferRules bytes.Buffer
-		for _, rule := range transfer {
-			transferRules.WriteString(fmt.Sprintf(
-				transferRuleTemplate, rule.By, rule.To,
-			))
-		}
-		stateTransfers.WriteString(fmt.Sprintf(
-			stateTransferTemplate, from, transferRules.String(),
-		))
-	}
-
-	var acceptStates bytes.Buffer
-	for k := range dfa.DFA.AcceptStates {
-		acceptStates.WriteString(fmt.Sprintf("\t\t%d: true,\n", k))
-	}
-
-	buf.WriteString(fmt.Sprintf(
-		automataTemplate,
-		dfa.Name,
-		dfa.DFA.CurrentState,
-		acceptStates.String(),
-		stateTransfers.String(),
-	))
-
-	return buf.String()
-}
-
 const (
-	lexerHeader = `package lexer
+	lexerHeader = `package %s
 
 import (
 	"errors"
 )
 `
-	charIterHeader = `package lexer
-`
-	automataHeader = `package lexer
-
-import (
-	"errors"
-	"fmt"
-)
-`
-
-	charReader = `
-// character reader
-type CharIterator interface {
-	CurrentIndex() int
-	NextChar() rune
-	Peek() rune
-	SetIndex(i int)
-	SubString(l int, r int) []rune
-}
-
-// Character reader implement
-type CharStream struct {
-	curIdx int
-	runes  []rune
-}
-
-func NewStream(input string) *CharStream {
-	return &CharStream{0, []rune(input)}
-}
-
-func (cs *CharStream) CurrentIndex() int {
-	return cs.curIdx
-}
-
-func (cs *CharStream) NextChar() rune {
-	if cs.curIdx >= len(cs.runes) {
-		return 0
-	}
-	r := cs.runes[cs.curIdx]
-	cs.curIdx++
-	return r
-}
-
-func (cs *CharStream) Peek() rune {
-	if cs.curIdx >= len(cs.runes) {
-		return 0
-	}
-	return cs.runes[cs.curIdx]
-}
-
-func (cs *CharStream) SetIndex(i int) {
-	cs.curIdx = i
-}
-
-func (cs *CharStream) SubString(from int, limit int) []rune {
-	return cs.runes[from:limit]
-}
-`
-
-	token = `
-// Token
-type TokenType string
-type TokenValue string
-type Token struct {
-	Type  TokenType
-	Token TokenValue
-}
-`
-
 	// lexer(
 	//     []name,
 	// )
@@ -255,14 +117,160 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 `
+	token = `
+// Token
+type TokenType string
+type TokenValue string
+type Token struct {
+	Type  TokenType
+	Token TokenValue
+}
+`
+)
 
+// GenCharIterator
+func genCharIterator(packageName string) func(io.Writer) error {
+	return func(writer io.Writer) (err error) {
+		_, err = io.WriteString(writer, fmt.Sprintf(charIterHeader, packageName))
+		if err != nil {
+			return
+		}
+
+		_, err = io.WriteString(writer, charReader)
+		return
+	}
+}
+const (
+	charIterHeader = `package %s
+`
+	charReader = `
+// character reader
+type CharIterator interface {
+	CurrentIndex() int
+	NextChar() rune
+	Peek() rune
+	SetIndex(i int)
+	SubString(l int, r int) []rune
+}
+
+// Character reader implement
+type CharStream struct {
+	curIdx int
+	runes  []rune
+}
+
+func NewStream(input string) *CharStream {
+	return &CharStream{0, []rune(input)}
+}
+
+func (cs *CharStream) CurrentIndex() int {
+	return cs.curIdx
+}
+
+func (cs *CharStream) NextChar() rune {
+	if cs.curIdx >= len(cs.runes) {
+		return 0
+	}
+	r := cs.runes[cs.curIdx]
+	cs.curIdx++
+	return r
+}
+
+func (cs *CharStream) Peek() rune {
+	if cs.curIdx >= len(cs.runes) {
+		return 0
+	}
+	return cs.runes[cs.curIdx]
+}
+
+func (cs *CharStream) SetIndex(i int) {
+	cs.curIdx = i
+}
+
+func (cs *CharStream) SubString(from int, limit int) []rune {
+	return cs.runes[from:limit]
+}
+`
+)
+
+// GenAutomata
+func genAutomata(packageName string, dfas []*NamedDFA) func(io.Writer) error {
+	return func(writer io.Writer) (err error) {
+		_, err = io.WriteString(writer, fmt.Sprintf(automataHeader, packageName))
+		if err != nil {
+			return
+		}
+
+		_, err = io.WriteString(writer, automata)
+		if err != nil {
+			return
+		}
+
+		for _, lx := range dfas {
+			c := buildLexerCode(lx)
+			_, err = io.WriteString(writer, c)
+			if err != nil {
+				return
+			}
+		}
+		return
+	}
+}
+func buildLexerCode(dfa *NamedDFA) string {
+	var buf bytes.Buffer
+	buf.WriteString("\ntype " + dfa.Name + " struct{}")
+
+	ruleFromState := make(map[int][]*fa.Rule)
+	for _, r := range dfa.DFA.RuleBook.Rules {
+		ruleFromState[r.From] = append(ruleFromState[r.From], r)
+	}
+
+	var stateTransfers bytes.Buffer
+	for from, transfer := range ruleFromState {
+		var transferRules bytes.Buffer
+		for _, rule := range transfer {
+			var str string
+			if rule.By.LeftMost == rule.By.RightMost {
+				str = fmt.Sprintf(transferRuleTemplate, rule.By.RightMost, rule.To)
+			} else {
+				str = fmt.Sprintf(transferRule2Template, rule.By.LeftMost, rule.By.RightMost, rule.To)
+			}
+			transferRules.WriteString(str)
+		}
+		stateTransfers.WriteString(fmt.Sprintf(
+			stateTransferTemplate, from, transferRules.String(),
+		))
+	}
+
+	var acceptStates bytes.Buffer
+	for k := range dfa.DFA.AcceptStates {
+		acceptStates.WriteString(fmt.Sprintf("\t\t%d: true,\n", k))
+	}
+
+	buf.WriteString(fmt.Sprintf(
+		automataTemplate,
+		dfa.Name,
+		dfa.DFA.CurrentState,
+		acceptStates.String(),
+		stateTransfers.String(),
+	))
+
+	return buf.String()
+}
+const (
+	automataHeader = `package %s
+
+import (
+	"errors"
+	"fmt"
+)
+`
 	automata = `
 // Automata
 type Automata interface {
 	RunGreedy(iter CharIterator) error
 }
 `
-
 	// automataTemplate(
 	//     name,
 	//     startState,
@@ -300,28 +308,42 @@ outer:
 	// )
 	stateTransferTemplate = `
 		case %d:
-			switch c {
+			switch {
 %s			default:
 				break outer
 			}
 `
 
 	// rule(
-	//     by,
+	//     by.LeftMost,
+	//     by.RightMost,
 	//     to,
 	// )
-	transferRuleTemplate = `			case '%c':
+	transferRule2Template = `			case '%c' <= c && c <= '%c':
+				currentState = %d
+`
+	transferRuleTemplate = `			case c == '%c':
 				currentState = %d
 `
 
-	testTemplate = `package lexer
+)
+
+// GenTest
+func genTest(packageName string) func(io.Writer) error {
+	return func(writer io.Writer) (err error) {
+		_, err = io.WriteString(writer, fmt.Sprintf(testTemplate, packageName))
+		return
+	}
+}
+const (
+	testTemplate = `package %s
 
 import (
 	"testing"
 )
 
 func TestLexer(t *testing.T) {
-	cs := NewStream(` + "`" +`
+	cs := NewStream(` + "`" + `
 if (a_for_apple == 10000) {
 	var b_for_ball = 10086;
 	return b_for_banana;

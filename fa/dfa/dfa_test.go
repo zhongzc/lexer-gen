@@ -1,27 +1,27 @@
 package dfa
 
 import (
-	"github.com/zhongzc/lexerGen/fa"
+	. "github.com/zhongzc/lexerGen/fa"
 	"testing"
 )
 
-var rb *fa.RuleBook
+var rb *RuleBook
 
 func init() {
-	rb = &fa.RuleBook{Rules: []*fa.Rule{
-		{1, 'a', 2},
-		{1, 'b', 1},
-		{2, 'a', 2},
-		{2, 'b', 3},
-		{3, 'a', 3},
-		{3, 'b', 3},
-	}}
+	rb = NewRuleBook([]*Rule{
+		{1, OneChar('a'), 2},
+		{1, OneChar('b'), 1},
+		{2, OneChar('a'), 2},
+		{2, OneChar('b'), 3},
+		{3, OneChar('a'), 3},
+		{3, OneChar('b'), 3},
+	})
 }
 
 func TestRuleBook_NextState(t *testing.T) {
 	var s int
 	var err error
-	s, err = rb.NextState(1, 'a')
+	s, err = rb.NextState(1, OneChar('a'))
 	if err != nil {
 		t.Fatalf("rb.NextState() failed: %s", err)
 	}
@@ -29,7 +29,7 @@ func TestRuleBook_NextState(t *testing.T) {
 		t.Errorf("rb.NextState() expected %d, got %d", 2, s)
 	}
 
-	s, err = rb.NextState(1, 'b')
+	s, err = rb.NextState(1, OneChar('b'))
 	if err != nil {
 		t.Fatalf("rb.NextState() failed: %s", err)
 	}
@@ -37,7 +37,7 @@ func TestRuleBook_NextState(t *testing.T) {
 		t.Errorf("rb.NextState() expected %d, got %d", 1, s)
 	}
 
-	s, err = rb.NextState(2, 'b')
+	s, err = rb.NextState(2, OneChar('b'))
 	if err != nil {
 		t.Fatalf("rb.NextState() failed: %s", err)
 	}

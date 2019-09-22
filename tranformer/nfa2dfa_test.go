@@ -10,33 +10,42 @@ var ns *NFASimulation
 
 func init() {
 	rb := &fa.RuleBook{Rules: []*fa.Rule{
-		{1, 'a', 1},
-		{1, 'a', 2},
-		{1, 0, 2},
-		{2, 'b', 3},
-		{3, 'b', 1},
-		{3, 0, 2},
+		{1, fa.OneChar('a'), 1},
+		{1, fa.OneChar('a'), 2},
+		{1, fa.Free(), 2},
+		{2, fa.OneChar('b'), 3},
+		{3, fa.OneChar('b'), 1},
+		{3, fa.Free(), 2},
 	}}
 	n := nfa.New(rb, fa.NewSet(1), fa.NewSet(3))
 	ns = &NFASimulation{n}
 }
 
 func TestNFASimulation_NextState(t *testing.T) {
-
-	if !ns.NextState(fa.NewSet(1, 2), 'a').Equal(fa.NewSet(1, 2)) {
-		t.Errorf("ns.NextState() expected %v. got %v", fa.NewSet(1, 2), ns.NextState(fa.NewSet(1, 2), 'a'))
+	expected := fa.NewSet(1, 2)
+	got := ns.NextState(fa.NewSet(1, 2), fa.OneChar('a'))
+	if !got.Equal(expected) {
+		t.Errorf("ns.NextState() expected %v. got %v", expected, got)
 	}
-	if !ns.NextState(fa.NewSet(1, 2), 'b').Equal(fa.NewSet(2, 3)) {
-		t.Errorf("ns.NextState() expected %v. got %v", fa.NewSet(2, 3), ns.NextState(fa.NewSet(1, 2), 'b'))
+	expected = fa.NewSet(2, 3)
+	got = ns.NextState(fa.NewSet(1, 2), fa.OneChar('b'))
+	if !got.Equal(expected) {
+		t.Errorf("ns.NextState() expected %v. got %v", expected, got)
 	}
-	if !ns.NextState(fa.NewSet(3, 2), 'b').Equal(fa.NewSet(1, 2, 3)) {
-		t.Errorf("ns.NextState() expected %v. got %v", fa.NewSet(1, 2, 3), ns.NextState(fa.NewSet(3, 2), 'b'))
+	expected = fa.NewSet(1, 2, 3)
+	got = ns.NextState(fa.NewSet(3, 2), fa.OneChar('b'))
+	if !got.Equal(expected) {
+		t.Errorf("ns.NextState() expected %v. got %v", expected, got)
 	}
-	if !ns.NextState(fa.NewSet(1, 3, 2), 'b').Equal(fa.NewSet(1, 2, 3)) {
-		t.Errorf("ns.NextState() expected %v. got %v", fa.NewSet(1, 2, 3), ns.NextState(fa.NewSet(1, 3, 2), 'b'))
+	expected = fa.NewSet(1, 2, 3)
+	got = ns.NextState(fa.NewSet(1, 3, 2), fa.OneChar('b'))
+	if !got.Equal(expected) {
+		t.Errorf("ns.NextState() expected %v. got %v", expected, got)
 	}
-	if !ns.NextState(fa.NewSet(1, 3, 2), 'a').Equal(fa.NewSet(1, 2)) {
-		t.Errorf("ns.NextState() expected %v. got %v", fa.NewSet(1, 2), ns.NextState(fa.NewSet(1, 3, 2), 'a'))
+	expected = fa.NewSet(1, 2)
+	got = ns.NextState(fa.NewSet(1, 3, 2), fa.OneChar('a'))
+	if !got.Equal(expected) {
+		t.Errorf("ns.NextState() expected %v. got %v", expected, got)
 	}
 }
 

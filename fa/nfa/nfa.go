@@ -38,6 +38,11 @@ func (nfa *NFA) CanAccept() bool {
 }
 
 func (nfa *NFA) ReadChar(by rune) (err error) {
+	nfa.currentStates, err = nfa.RuleBook.NextStates(nfa.CurrentStates(), OneChar(by))
+	return
+}
+
+func (nfa *NFA) ReadCharset(by Charset) (err error) {
 	nfa.currentStates, err = nfa.RuleBook.NextStates(nfa.CurrentStates(), by)
 	return
 }

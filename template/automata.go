@@ -26,78 +26,79 @@ outer:
 		switch currentState {
 
 		case 8:
-			switch c {
-			case 'c':
+			switch {
+			case 'c' <= c && c <= 'c':
 				currentState = 9
 			default:
 				break outer
 			}
 
+
 		case 9:
-			switch c {
-			case 'a':
+			switch {
+			case 'a' <= c && c <= 'a':
 				currentState = 6
 			default:
 				break outer
 			}
 
 		case 3:
-			switch c {
-			case 'o':
+			switch {
+			case 'o' <= c && c <= 'o':
 				currentState = 5
 			default:
 				break outer
 			}
 
 		case 4:
-			switch c {
-			case 'c':
+			switch {
+			case 'c' <= c && c <= 'c':
 				currentState = 4
-			case 'd':
+			case 'd' <= c && c <= 'd':
 				currentState = 3
-			case 'a':
+			case 'a' <= c && c <= 'a':
 				currentState = 6
 			default:
 				break outer
 			}
 
 		case 5:
-			switch c {
-			case 'g':
+			switch {
+			case 'g' <= c && c <= 'g':
 				currentState = 7
 			default:
 				break outer
 			}
 
 		case 6:
-			switch c {
-			case 't':
+			switch {
+			case 't' <= c && c <= 't':
 				currentState = 8
 			default:
 				break outer
 			}
 
 		case 0:
-			switch c {
-			case 'a':
+			switch {
+			case 'a' <= c && c <= 'a':
 				currentState = 1
 			default:
 				break outer
 			}
 
 		case 1:
-			switch c {
-			case 'b':
+			switch {
+			case 'b' <= c && c <= 'b':
 				currentState = 2
 			default:
 				break outer
 			}
 
 		case 2:
-			switch c {
-			case 'd':
+			switch {
+			case 'd' <= c && c <= 'd':
 				currentState = 3
-			case 'c':
+			case 'c' <= c && c <= 'c':
 				currentState = 4
 			default:
 				break outer

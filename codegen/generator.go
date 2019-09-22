@@ -4,10 +4,11 @@ import (
 	"github.com/zhongzc/lexerGen/fa/dfa"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 type Generator interface {
-	Generate(dfas []*NamedDFA) map[string]func(io.Writer) error
+	Generate(packageName string, dfas []*NamedDFA) map[string]func(io.Writer) error
 }
 
 func Gen(g Generator, path string, dfas []*NamedDFA) (err error) {
@@ -15,10 +16,10 @@ func Gen(g Generator, path string, dfas []*NamedDFA) (err error) {
 	if err != nil {
 		return
 	}
-
-	for filename, w := range g.Generate(dfas) {
+	_, pkgName := filepath.Split(path)
+	for filename, w := range g.Generate(pkgName, dfas) {
 		var f *os.File
-		f, err = os.OpenFile(path+"/"+filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		f, err = os.OpenFile(filepath.Join(path, filename), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return
 		}

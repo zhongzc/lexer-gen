@@ -30,7 +30,7 @@ func (dfa *DFA) CanAccept() bool {
 }
 
 func (dfa *DFA) ReadChar(by rune) (err error) {
-	dfa.CurrentState, err = dfa.RuleBook.NextState(dfa.CurrentState, by)
+	dfa.CurrentState, err = dfa.RuleBook.NextState(dfa.CurrentState, OneChar(by))
 	return
 }
 

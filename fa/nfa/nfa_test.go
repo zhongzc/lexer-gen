@@ -8,15 +8,15 @@ import (
 var rb *RuleBook
 
 func init() {
-	rb = &RuleBook{Rules: []*Rule{
-		{1, 'a', 1},
-		{1, 'b', 1},
-		{1, 'b', 2},
-		{2, 'a', 3},
-		{2, 'b', 3},
-		{3, 'a', 4},
-		{3, 'b', 4},
-	}}
+	rb = NewRuleBook([]*Rule{
+		{1, OneChar('a'), 1},
+		{1, OneChar('b'), 1},
+		{1, OneChar('b'), 2},
+		{2, OneChar('a'), 3},
+		{2, OneChar('b'), 3},
+		{3, OneChar('a'), 4},
+		{3, OneChar('b'), 4},
+	})
 }
 
 func TestNFA_CanAccept(t *testing.T) {
@@ -99,7 +99,7 @@ func TestNFA_ReadString(t *testing.T) {
 func TestRuleBook_NextStates(t *testing.T) {
 	var ss StateSet
 	var err error
-	ss, err = rb.NextStates(NewSet(1), 'b')
+	ss, err = rb.NextStates(NewSet(1), OneChar('b'))
 	if err != nil {
 		t.Fatalf("rb.nextState() failed: %s", err)
 	}
@@ -107,7 +107,7 @@ func TestRuleBook_NextStates(t *testing.T) {
 		t.Errorf("rb.NextStates() expected %v. got %v", NewSet(1, 2), ss)
 	}
 
-	ss, err = rb.NextStates(NewSet(1, 2), 'a')
+	ss, err = rb.NextStates(NewSet(1, 2), OneChar('a'))
 	if err != nil {
 		t.Fatalf("rb.nextState() failed: %s", err)
 	}
@@ -115,7 +115,7 @@ func TestRuleBook_NextStates(t *testing.T) {
 		t.Errorf("rb.NextStates() expected %v. got %v", NewSet(1, 3), ss)
 	}
 
-	ss, err = rb.NextStates(NewSet(1, 3), 'b')
+	ss, err = rb.NextStates(NewSet(1, 3), OneChar('b'))
 	if err != nil {
 		t.Fatalf("rb.nextState() failed: %s", err)
 	}
@@ -126,15 +126,15 @@ func TestRuleBook_NextStates(t *testing.T) {
 
 func TestRuleBook_FreeMove(t *testing.T) {
 	rb := &RuleBook{Rules: []*Rule{
-		{1, 0, 2},
-		{1, 0, 4},
-		{2, 'a', 3},
-		{3, 'a', 2},
-		{4, 'a', 5},
-		{5, 'a', 6},
-		{6, 'a', 4},
+		{1, Free(), 2},
+		{1, Free(), 4},
+		{2, OneChar('a'), 3},
+		{3, OneChar('a'), 2},
+		{4, OneChar('a'), 5},
+		{5, OneChar('a'), 6},
+		{6, OneChar('a'), 4},
 	}}
-	ss, err := rb.NextStates(NewSet(1), 0)
+	ss, err := rb.NextStates(NewSet(1), Free())
 	if err != nil {
 		t.Fatalf("rb.nextState() failed: %s", err)
 	}
