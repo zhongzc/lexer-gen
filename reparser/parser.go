@@ -87,14 +87,17 @@ func (p *Parser) factor() (RegEx, error) {
 	if p.peek() == '*' {
 		_ = p.eat('*')
 		b = NewRepeat(b)
+	} else if p.peek() == '+' {
+		_ = p.eat('+')
+		b = NewChoose(b, NewRepeat(b))
 	}
 	return b, nil
 }
 
-// base :=     '('   <regex>  )'  |
-//             '[' <charsets> ']' |
-//         '^' '[' <charsets> ']' |
-//              <primitive>
+// base := '('   <regex>     ')' |
+//         '[' <charsets>    ']' |
+//         '[' '^' <negated> ']' |
+//         <primitive>
 func (p *Parser) base() (RegEx, error) {
 	switch p.peek() {
 	case '(':
@@ -115,24 +118,19 @@ func (p *Parser) base() (RegEx, error) {
 		return NewPrimitive(c, c), nil
 	case '[':
 		_ = p.eat('[')
-		re, err := p.charsets()
-		if err != nil {
-			return nil, errors.New("p.base() expected a charsets\n" + err.Error())
-		}
-		err = p.eat(']')
-		if err != nil {
-			return nil, err
-		}
-		return re, nil
-	case '^':
-		_ = p.eat('^')
-		err := p.eat('[')
-		if err != nil {
-			return nil, err
-		}
-		re, err := p.excludeCharsets()
-		if err != nil {
-			return nil, errors.New("p.base() expected a excludeCharsets\n" + err.Error())
+		var re RegEx
+		var err error
+		if p.peek() == '^' {
+			_ = p.eat('^')
+			re, err = p.negated()
+			if err != nil {
+				return nil, errors.New("p.base() expected a negated group\n" + err.Error())
+			}
+		} else {
+			re, err = p.charsets()
+			if err != nil {
+				return nil, errors.New("p.base() expected a charsets\n" + err.Error())
+			}
 		}
 		err = p.eat(']')
 		if err != nil {
@@ -188,8 +186,11 @@ func (p *Parser) charsets() (res RegEx, err error) {
 	return
 }
 
-// notCharsets := '^' <charsets>
-func (p *Parser) excludeCharsets() (res RegEx, err error) {
+// negated := <primitive> '-' <primitive> <negated> |
+//            <primitive> '-' <primitive>           |
+//            <primitive>                 <negated> |
+//            <primitive>                           |
+func (p *Parser) negated() (res RegEx, err error) {
 	type charset struct {
 		From rune
 		To   rune
@@ -252,10 +253,31 @@ func (p *Parser) excludeCharsets() (res RegEx, err error) {
 	return
 }
 
+const (
+	escLeave = "[]()*+|^\\-"
+	escCharK = "tbnrf"
+	escCharV = "\t\b\n\r\f"
+)
+
 // primitive := '\' . | .
 func eatEscOrOrd(p *Parser) (r rune, err error) {
 	if p.peek() == '\\' {
 		_ = p.eat('\\')
+		r = p.peek()
+		for _, e := range []rune(escLeave) {
+			if e == r {
+				_ = p.eat(r)
+				return
+			}
+		}
+		for i, e := range []rune(escCharK) {
+			if e == r {
+				_ = p.eat(r)
+				r = ([]rune(escCharV))[i]
+				return
+			}
+		}
+		return 0, errors.New("unsupported escape character")
 	}
 	r = p.peek()
 	if r == 0 {

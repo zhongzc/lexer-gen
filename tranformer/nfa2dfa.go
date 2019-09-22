@@ -49,7 +49,9 @@ func (ns *NFASimulation) ToDFA() *dfa.DFA {
 		}
 	}
 
-	return dfa.New(fa.NewRuleBook(rules), startState, fa.NewSet(acceptStates...))
+	rb := &fa.RuleBook{Rules: rules}
+	rb.Assemble()
+	return dfa.New(rb, startState, fa.NewSet(acceptStates...))
 }
 
 func (ns *NFASimulation) NextState(from fa.StateSet, by fa.Charset) fa.StateSet {

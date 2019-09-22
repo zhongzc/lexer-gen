@@ -9,9 +9,10 @@ func TestLexer(t *testing.T) {
 if (a_for_apple == 10000) {
 	var b_for_ball = 10086;
 	return b_for_banana;
+	// a single-line comment
 } else {
 	/*
-	a funny comment
+	a multi-line comment
 	cooooooool!
 	*/
 	return 0;

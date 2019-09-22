@@ -117,9 +117,8 @@ func TestToNFA(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(re.REString())
 	nfa = ToNFA(re)
 	if !nfa.Match("/* hello \n */") {
-		t.Errorf("")
+		t.Errorf("toNFA().ToDFA().Match() expected %t. got %t", true, false)
 	}
 }

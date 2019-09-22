@@ -41,8 +41,14 @@ type RuleBook struct {
 }
 
 func NewRuleBook(rules []*Rule) *RuleBook {
+	rb := &RuleBook{rules}
+	rb.Scatter()
+	return rb
+}
+
+func (rb *RuleBook) Scatter() {
 	splitPoints := make(map[rune]bool)
-	for _, r := range rules {
+	for _, r := range rb.Rules {
 		splitPoints[r.By.LeftMost] = true
 		splitPoints[r.By.RightMost] = true
 	}
@@ -52,8 +58,8 @@ func NewRuleBook(rules []*Rule) *RuleBook {
 	}
 	sort.Ints(ordered)
 
-	newRB := make([]*Rule, 0, len(rules))
-	for _, r := range rules {
+	newRB := make([]*Rule, 0, len(rb.Rules))
+	for _, r := range rb.Rules {
 		lt := sort.SearchInts(ordered, int(r.By.LeftMost))
 		rt := sort.SearchInts(ordered, int(r.By.RightMost))
 		if lt == rt || lt+1 == rt {
@@ -66,7 +72,43 @@ func NewRuleBook(rules []*Rule) *RuleBook {
 			newRB = append(newRB, newRule)
 		}
 	}
-	return &RuleBook{Rules: newRB}
+	rb.Rules = newRB
+}
+
+func (rb *RuleBook) Assemble() {
+	type stateTran struct {
+		From int
+		To   int
+	}
+	sameStateTran := make(map[stateTran][]Charset)
+	for _, r := range rb.Rules {
+		t := stateTran{r.From, r.To}
+		sameStateTran[t] = append(sameStateTran[t], r.By)
+	}
+	newRB := make([]*Rule, 0, len(rb.Rules))
+	for k, v := range sameStateTran {
+		sort.Slice(v, func(i, j int) bool {
+			if v[i].LeftMost == v[j].LeftMost {
+				return v[i].RightMost < v[j].RightMost
+			}
+			return v[i].LeftMost < v[j].LeftMost
+		})
+		f := v[0].LeftMost
+		t := v[0].RightMost
+		for _, tr := range v[1:] {
+			if tr.LeftMost == t {
+				t = tr.RightMost
+			} else {
+				r := NewRule(k.From, Charset{f, t}, k.To)
+				newRB = append(newRB, r)
+				f = tr.LeftMost
+				t = tr.RightMost
+			}
+		}
+		r := NewRule(k.From, Charset{f, t}, k.To)
+		newRB = append(newRB, r)
+	}
+	rb.Rules = newRB
 }
 
 func (rb *RuleBook) Alphabet() (a map[Charset]bool) {
