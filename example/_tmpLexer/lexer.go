@@ -1,7 +1,8 @@
-package _tmpLexer
+package lexer
 
 import (
 	"errors"
+	"unicode"
 )
 
 // Lexer
@@ -33,6 +34,7 @@ func NewLexer(chars CharIterator) *Lexer {
 			{"ASSIGN", &ASSIGN{}},
 			{"NUM", &NUM{}},
 			{"IDENT", &IDENT{}},
+			{"COMMENT", &COMMENT{}},
 		},
 	}
 }
@@ -69,7 +71,7 @@ func (l *Lexer) HasNext() bool {
 
 func (l *Lexer) skipWhitespace() {
 	c := l.Chars.Peek()
-	for c == ' ' || c == '\t' || c == '\n' {
+	for unicode.IsSpace(c) {
 		l.Chars.NextChar()
 		c = l.Chars.Peek()
 	}

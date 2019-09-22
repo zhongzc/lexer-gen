@@ -1,4 +1,4 @@
-package _tmpLexer
+package lexer
 
 import (
 	"errors"
@@ -486,6 +486,7 @@ func (a *NUM) RunGreedy(iter CharIterator) error {
 	acceptState := map[int]bool{
 		1: true,
 		2: true,
+		3: true,
 	}
 
 	c := iter.Peek()
@@ -495,15 +496,9 @@ outer:
 
 		case 0:
 			switch {
-			case '0' <= c && c <= '9':
+			case c == '0':
 				currentState = 1
-			default:
-				break outer
-			}
-
-		case 1:
-			switch {
-			case '0' <= c && c <= '9':
+			case '1' <= c && c <= '9':
 				currentState = 2
 			default:
 				break outer
@@ -511,8 +506,24 @@ outer:
 
 		case 2:
 			switch {
-			case '0' <= c && c <= '9':
-				currentState = 2
+			case c == '0':
+				currentState = 3
+			case '1' <= c && c <= '9':
+				currentState = 3
+			case '0' <= c && c <= '1':
+				currentState = 3
+			default:
+				break outer
+			}
+
+		case 3:
+			switch {
+			case c == '0':
+				currentState = 3
+			case '1' <= c && c <= '9':
+				currentState = 3
+			case '0' <= c && c <= '1':
+				currentState = 3
 			default:
 				break outer
 			}
@@ -535,11 +546,148 @@ type IDENT struct{}
 func (a *IDENT) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
-		1: true,
-		2: true,
 		3: true,
 		4: true,
 		5: true,
+		6: true,
+		7: true,
+		1: true,
+		2: true,
+	}
+
+	c := iter.Peek()
+outer:
+	for {
+		switch currentState {
+
+		case 6:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 4
+			case 'a' <= c && c <= 'z':
+				currentState = 5
+			case c == '_':
+				currentState = 6
+			case '0' <= c && c <= '9':
+				currentState = 7
+			default:
+				break outer
+			}
+
+		case 7:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 4
+			case 'a' <= c && c <= 'z':
+				currentState = 5
+			case c == '_':
+				currentState = 6
+			case '0' <= c && c <= '9':
+				currentState = 7
+			default:
+				break outer
+			}
+
+		case 0:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 1
+			case 'a' <= c && c <= 'z':
+				currentState = 2
+			case c == '_':
+				currentState = 3
+			default:
+				break outer
+			}
+
+		case 1:
+			switch {
+			case c == '_':
+				currentState = 6
+			case '0' <= c && c <= '9':
+				currentState = 7
+			case 'A' <= c && c <= 'Z':
+				currentState = 4
+			case 'a' <= c && c <= 'z':
+				currentState = 5
+			default:
+				break outer
+			}
+
+		case 2:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 4
+			case 'a' <= c && c <= 'z':
+				currentState = 5
+			case c == '_':
+				currentState = 6
+			case '0' <= c && c <= '9':
+				currentState = 7
+			default:
+				break outer
+			}
+
+		case 3:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 4
+			case 'a' <= c && c <= 'z':
+				currentState = 5
+			case c == '_':
+				currentState = 6
+			case '0' <= c && c <= '9':
+				currentState = 7
+			default:
+				break outer
+			}
+
+		case 4:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 4
+			case 'a' <= c && c <= 'z':
+				currentState = 5
+			case c == '_':
+				currentState = 6
+			case '0' <= c && c <= '9':
+				currentState = 7
+			default:
+				break outer
+			}
+
+		case 5:
+			switch {
+			case c == '_':
+				currentState = 6
+			case '0' <= c && c <= '9':
+				currentState = 7
+			case 'A' <= c && c <= 'Z':
+				currentState = 4
+			case 'a' <= c && c <= 'z':
+				currentState = 5
+			default:
+				break outer
+			}
+
+		default:
+			break outer
+		}
+		iter.NextChar()
+		c = iter.Peek()
+	}
+
+	if acceptState[currentState] {
+		return nil
+	}
+	msg := fmt.Sprintf("%T run failed", a)
+	return errors.New(msg)
+}
+
+type COMMENT struct{}
+func (a *COMMENT) RunGreedy(iter CharIterator) error {
+	currentState := 0
+	acceptState := map[int]bool{
 		6: true,
 	}
 
@@ -548,86 +696,138 @@ outer:
 	for {
 		switch currentState {
 
+		case 2:
+			switch {
+			case c == '/':
+				currentState = 3
+			case '\x01' <= c && c <= ')':
+				currentState = 5
+			case '+' <= c && c <= '.':
+				currentState = 3
+			case '0' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case c == '*':
+				currentState = 4
+			case '.' <= c && c <= '/':
+				currentState = 3
+			case '/' <= c && c <= '0':
+				currentState = 3
+			default:
+				break outer
+			}
+
 		case 3:
 			switch {
-			case 'A' <= c && c <= 'Z':
+			case c == '/':
+				currentState = 3
+			case '\x01' <= c && c <= ')':
 				currentState = 5
-			case 'a' <= c && c <= 'z':
-				currentState = 6
-			case c == '_':
+			case '.' <= c && c <= '/':
+				currentState = 3
+			case '/' <= c && c <= '0':
+				currentState = 3
+			case '0' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case c == '*':
 				currentState = 4
+			case '+' <= c && c <= '.':
+				currentState = 3
 			default:
 				break outer
 			}
 
 		case 4:
 			switch {
-			case 'a' <= c && c <= 'z':
+			case '\x01' <= c && c <= ')':
+				currentState = 7
+			case '+' <= c && c <= '.':
+				currentState = 7
+			case c == '/':
 				currentState = 6
-			case c == '_':
-				currentState = 4
-			case 'A' <= c && c <= 'Z':
-				currentState = 5
+			case c == '*':
+				currentState = 7
+			case ')' <= c && c <= '*':
+				currentState = 7
+			case '*' <= c && c <= '+':
+				currentState = 7
+			case '0' <= c && c <= '\U0010ffff':
+				currentState = 8
 			default:
 				break outer
 			}
 
 		case 5:
 			switch {
-			case 'A' <= c && c <= 'Z':
-				currentState = 5
-			case 'a' <= c && c <= 'z':
-				currentState = 6
-			case c == '_':
+			case c == '*':
 				currentState = 4
+			case '\x01' <= c && c <= ')':
+				currentState = 5
+			case '.' <= c && c <= '/':
+				currentState = 3
+			case '0' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case c == '/':
+				currentState = 3
+			case '+' <= c && c <= '.':
+				currentState = 3
+			case '/' <= c && c <= '0':
+				currentState = 3
 			default:
 				break outer
 			}
 
-		case 6:
+		case 7:
 			switch {
-			case c == '_':
+			case c == '/':
+				currentState = 3
+			case c == '*':
 				currentState = 4
-			case 'A' <= c && c <= 'Z':
+			case '\x01' <= c && c <= ')':
 				currentState = 5
-			case 'a' <= c && c <= 'z':
-				currentState = 6
+			case '+' <= c && c <= '.':
+				currentState = 3
+			case '.' <= c && c <= '/':
+				currentState = 3
+			case '0' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case '/' <= c && c <= '0':
+				currentState = 3
+			default:
+				break outer
+			}
+
+		case 8:
+			switch {
+			case '+' <= c && c <= '.':
+				currentState = 3
+			case '/' <= c && c <= '0':
+				currentState = 3
+			case c == '*':
+				currentState = 4
+			case '\x01' <= c && c <= ')':
+				currentState = 5
+			case '.' <= c && c <= '/':
+				currentState = 3
+			case '0' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case c == '/':
+				currentState = 3
 			default:
 				break outer
 			}
 
 		case 0:
 			switch {
-			case c == '_':
-				currentState = 3
-			case 'A' <= c && c <= 'Z':
+			case c == '/':
 				currentState = 1
-			case 'a' <= c && c <= 'z':
-				currentState = 2
 			default:
 				break outer
 			}
 
 		case 1:
 			switch {
-			case c == '_':
-				currentState = 4
-			case 'A' <= c && c <= 'Z':
-				currentState = 5
-			case 'a' <= c && c <= 'z':
-				currentState = 6
-			default:
-				break outer
-			}
-
-		case 2:
-			switch {
-			case 'A' <= c && c <= 'Z':
-				currentState = 5
-			case 'a' <= c && c <= 'z':
-				currentState = 6
-			case c == '_':
-				currentState = 4
+			case c == '*':
+				currentState = 2
 			default:
 				break outer
 			}

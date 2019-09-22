@@ -5,27 +5,30 @@ import (
 	"fmt"
 	"github.com/zhongzc/lexerGen/fa"
 	"io"
+	"unicode"
 )
 
-type GoGen struct{}
-
-func NewGoGen() *GoGen {
-	return &GoGen{}
+type GoGen struct {
+	pkgName string
 }
 
-func (*GoGen) Generate(packageName string, dfas []*NamedDFA) map[string]func(io.Writer) error {
+func NewGoGen(pkgName string) *GoGen {
+	return &GoGen{pkgName}
+}
+
+func (gg *GoGen) Generate(dfas []*NamedDFA) map[string]func(io.Writer) error {
 	res := make(map[string]func(io.Writer) error)
-	res["lexer.go"] = genLexer(packageName, dfas)
-	res["charIterator.go"] = genCharIterator(packageName)
-	res["automata.go"] = genAutomata(packageName, dfas)
-	res["lexer_test.go"] = genTest(packageName)
+	res["lexer.go"] = genLexer(gg.pkgName, dfas)
+	res["charIterator.go"] = genCharIterator(gg.pkgName)
+	res["automata.go"] = genAutomata(gg.pkgName, dfas)
+	res["lexer_test.go"] = genTest(gg.pkgName)
 	return res
 }
 
 // GenLexer
-func genLexer(packageName string, dfas []*NamedDFA) func(io.Writer) error {
+func genLexer(pkgName string, dfas []*NamedDFA) func(io.Writer) error {
 	return func(writer io.Writer) (err error) {
-		_, err = io.WriteString(writer, fmt.Sprintf(lexerHeader, packageName))
+		_, err = io.WriteString(writer, fmt.Sprintf(lexerHeader, pkgName))
 		if err != nil {
 			return
 		}
@@ -48,11 +51,13 @@ func genLexer(packageName string, dfas []*NamedDFA) func(io.Writer) error {
 		return
 	}
 }
+
 const (
 	lexerHeader = `package %s
 
 import (
 	"errors"
+	"unicode"
 )
 `
 	// lexer(
@@ -111,7 +116,7 @@ func (l *Lexer) HasNext() bool {
 
 func (l *Lexer) skipWhitespace() {
 	c := l.Chars.Peek()
-	for c == ' ' || c == '\t' || c == '\n' {
+	for unicode.IsSpace(c) {
 		l.Chars.NextChar()
 		c = l.Chars.Peek()
 	}
@@ -129,9 +134,9 @@ type Token struct {
 )
 
 // GenCharIterator
-func genCharIterator(packageName string) func(io.Writer) error {
+func genCharIterator(pkgName string) func(io.Writer) error {
 	return func(writer io.Writer) (err error) {
-		_, err = io.WriteString(writer, fmt.Sprintf(charIterHeader, packageName))
+		_, err = io.WriteString(writer, fmt.Sprintf(charIterHeader, pkgName))
 		if err != nil {
 			return
 		}
@@ -140,6 +145,7 @@ func genCharIterator(packageName string) func(io.Writer) error {
 		return
 	}
 }
+
 const (
 	charIterHeader = `package %s
 `
@@ -194,9 +200,9 @@ func (cs *CharStream) SubString(from int, limit int) []rune {
 )
 
 // GenAutomata
-func genAutomata(packageName string, dfas []*NamedDFA) func(io.Writer) error {
+func genAutomata(pkgName string, dfas []*NamedDFA) func(io.Writer) error {
 	return func(writer io.Writer) (err error) {
-		_, err = io.WriteString(writer, fmt.Sprintf(automataHeader, packageName))
+		_, err = io.WriteString(writer, fmt.Sprintf(automataHeader, pkgName))
 		if err != nil {
 			return
 		}
@@ -231,9 +237,9 @@ func buildLexerCode(dfa *NamedDFA) string {
 		for _, rule := range transfer {
 			var str string
 			if rule.By.LeftMost == rule.By.RightMost {
-				str = fmt.Sprintf(transferRuleTemplate, rule.By.RightMost, rule.To)
+				str = fmt.Sprintf(transferRuleTemplate, wrapChar(rule.By.LeftMost), rule.To)
 			} else {
-				str = fmt.Sprintf(transferRule2Template, rule.By.LeftMost, rule.By.RightMost, rule.To)
+				str = fmt.Sprintf(transferRule2Template, wrapChar(rule.By.LeftMost), wrapChar(rule.By.RightMost), rule.To)
 			}
 			transferRules.WriteString(str)
 		}
@@ -257,6 +263,7 @@ func buildLexerCode(dfa *NamedDFA) string {
 
 	return buf.String()
 }
+
 const (
 	automataHeader = `package %s
 
@@ -319,22 +326,22 @@ outer:
 	//     by.RightMost,
 	//     to,
 	// )
-	transferRule2Template = `			case '%c' <= c && c <= '%c':
+	transferRule2Template = `			case %s <= c && c <= %s:
 				currentState = %d
 `
-	transferRuleTemplate = `			case c == '%c':
+	transferRuleTemplate = `			case c == %s:
 				currentState = %d
 `
-
 )
 
 // GenTest
-func genTest(packageName string) func(io.Writer) error {
+func genTest(pkgName string) func(io.Writer) error {
 	return func(writer io.Writer) (err error) {
-		_, err = io.WriteString(writer, fmt.Sprintf(testTemplate, packageName))
+		_, err = io.WriteString(writer, fmt.Sprintf(testTemplate, pkgName))
 		return
 	}
 }
+
 const (
 	testTemplate = `package %s
 
@@ -348,6 +355,10 @@ if (a_for_apple == 10000) {
 	var b_for_ball = 10086;
 	return b_for_banana;
 } else {
+	/*
+	a funny comment
+	cooooooool!
+	*/
 	return 0;
 }
 ` + "`" +
@@ -364,3 +375,11 @@ if (a_for_apple == 10000) {
 }
 `
 )
+
+func wrapChar(c rune) string {
+	if unicode.IsPrint(c) {
+		return fmt.Sprintf("'%c'", c)
+	} else {
+		return fmt.Sprintf("%q", c)
+	}
+}

@@ -60,7 +60,7 @@ func NewRuleBook(rules []*Rule) *RuleBook {
 			newRB = append(newRB, r)
 			continue
 		}
-		for i := lt; i <= rt; i++ {
+		for i := lt; i < rt; i++ {
 			cs := Charset{rune(ordered[i]), rune(ordered[i+1])}
 			newRule := NewRule(r.From, cs, r.To)
 			newRB = append(newRB, newRule)

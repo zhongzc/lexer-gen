@@ -12,7 +12,7 @@ func main() {
 		panic(err)
 	}
 	defer file.Close()
-	err = ruledef.BuildAll(file, "example/_tmpLexer", codegen.NewGoGen())
+	err = ruledef.BuildAll(file, "example/_tmpLexer", codegen.NewGoGen("lexer"))
 	if err != nil {
 		panic(err)
 	}

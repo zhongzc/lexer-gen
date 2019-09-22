@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	. "github.com/zhongzc/lexerGen/reast"
+	"sort"
+	"unicode"
 )
 
 type Parser struct {
@@ -89,9 +91,10 @@ func (p *Parser) factor() (RegEx, error) {
 	return b, nil
 }
 
-// base := '('   <regex>  )'  |
-//         '[' <charsets> ']' |
-//         <primitive>
+// base :=     '('   <regex>  )'  |
+//             '[' <charsets> ']' |
+//         '^' '[' <charsets> ']' |
+//              <primitive>
 func (p *Parser) base() (RegEx, error) {
 	switch p.peek() {
 	case '(':
@@ -115,6 +118,21 @@ func (p *Parser) base() (RegEx, error) {
 		re, err := p.charsets()
 		if err != nil {
 			return nil, errors.New("p.base() expected a charsets\n" + err.Error())
+		}
+		err = p.eat(']')
+		if err != nil {
+			return nil, err
+		}
+		return re, nil
+	case '^':
+		_ = p.eat('^')
+		err := p.eat('[')
+		if err != nil {
+			return nil, err
+		}
+		re, err := p.excludeCharsets()
+		if err != nil {
+			return nil, errors.New("p.base() expected a excludeCharsets\n" + err.Error())
 		}
 		err = p.eat(']')
 		if err != nil {
@@ -164,6 +182,70 @@ func (p *Parser) charsets() (res RegEx, err error) {
 			}
 		} else {
 			return nil, errors.New("p.charsets(): rhs can not be greater than lhs")
+		}
+	}
+
+	return
+}
+
+// notCharsets := '^' <charsets>
+func (p *Parser) excludeCharsets() (res RegEx, err error) {
+	type charset struct {
+		From rune
+		To   rune
+	}
+	cs := make(map[charset]bool)
+	cs[charset{1, unicode.MaxRune}] = true
+	for ; p.peek() != ']'; {
+		var f rune
+		var t rune
+
+		f, err = eatEscOrOrd(p)
+		if err != nil {
+			return nil, errors.New("p.charsets(): failed\n" + err.Error())
+		}
+		if p.peek() == '-' {
+			_ = p.eat('-')
+			t, err = eatEscOrOrd(p)
+			if err != nil {
+				return nil, errors.New("p.charsets(): failed\n" + err.Error())
+			}
+		} else {
+			t = f
+		}
+
+		if f <= t {
+			for k := range cs {
+				if k.From < f && t < k.To {
+					delete(cs, k)
+					cs[charset{k.From, f - 1}] = true
+					cs[charset{t + 1, k.To}] = true
+				} else if f <= k.From && k.To <= t {
+					delete(cs, k)
+				} else if k.From < f && f <= k.To {
+					delete(cs, k)
+					cs[charset{k.From, f - 1}] = true
+				} else if k.From <= t && t < k.To {
+					delete(cs, k)
+					cs[charset{t + 1, k.To}] = true
+				}
+			}
+		} else {
+			return nil, errors.New("p.charsets(): rhs can not be greater than lhs")
+		}
+	}
+	var ordered []charset
+	for k := range cs {
+		ordered = append(ordered, k)
+	}
+	sort.Slice(ordered, func(i, j int) bool {
+		return ordered[i].From < ordered[j].From
+	})
+	for _, k := range ordered {
+		if res == nil {
+			res = NewPrimitive(k.From, k.To)
+		} else {
+			res = NewChoose(res, NewPrimitive(k.From, k.To))
 		}
 	}
 

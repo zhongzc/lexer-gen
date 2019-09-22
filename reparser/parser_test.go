@@ -34,3 +34,15 @@ func TestEscCharset(t *testing.T) {
 		t.Fatalf("reparser.Parse() expected %q. got %q", expected, r.REString())
 	}
 }
+
+func TestExcludeCharset(t *testing.T) {
+	r, err := Parse("^[a-c1-4_]")
+	if err != nil {
+		t.Fatalf("reparser.Parse() failed: %s", err.Error())
+	}
+	expected := "(((\x01-0|5-^)|`)|d-\U0010ffff)"
+	if r.REString() != expected {
+		t.Fatalf("reparser.Parse() expected %q. got %q", expected, r.REString())
+	}
+}
+

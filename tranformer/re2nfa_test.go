@@ -112,4 +112,14 @@ func TestToNFA(t *testing.T) {
 	if !dfa.Match("abccccatcat") {
 		t.Errorf("toNFA().ToDFA().Match() expected %t. got %t", true, false)
 	}
+
+	re, err = reparser.Parse("/\\*(^[\\*]*\\*^[/])*^[\\*]*\\*/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(re.REString())
+	nfa = ToNFA(re)
+	if !nfa.Match("/* hello \n */") {
+		t.Errorf("")
+	}
 }

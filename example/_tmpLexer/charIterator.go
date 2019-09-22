@@ -1,4 +1,4 @@
-package _tmpLexer
+package lexer
 
 // character reader
 type CharIterator interface {
