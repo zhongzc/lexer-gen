@@ -1,4 +1,4 @@
-package template
+package _go
 
 import (
 	"errors"
@@ -21,19 +21,19 @@ func NewLexer(chars CharIterator) *Lexer {
 }
 
 func (l *Lexer) NextToken() (t *Token, err error) {
-	if l.Chars.Peek() == 0 {
+	if Peek() == 0 {
 		return nil, errors.New("reach EOF")
 	}
 	l.skipWhitespace()
-	idx := l.Chars.CurrentIndex()
+	idx := CurrentIndex()
 
 	for k, a := range l.automatas {
-		err = a.RunGreedy(l.Chars)
+		err = RunGreedy(l.Chars)
 		if err != nil {
-			l.Chars.SetIndex(idx)
+			SetIndex(idx)
 		} else {
-			var tv = l.Chars.SubString(idx, l.Chars.CurrentIndex())
-			idx = l.Chars.CurrentIndex()
+			var tv = SubString(idx, CurrentIndex())
+			idx = CurrentIndex()
 
 			t = &Token{TokenType(k), TokenValue(tv)}
 			err = nil
@@ -47,14 +47,14 @@ func (l *Lexer) NextToken() (t *Token, err error) {
 }
 
 func (l *Lexer) HasNext() bool {
-	return l.Chars.Peek() != 0
+	return Peek() != 0
 }
 
 func (l *Lexer) skipWhitespace() {
-	c := l.Chars.Peek()
+	c := Peek()
 	for unicode.IsSpace(c) {
-		l.Chars.NextChar()
-		c = l.Chars.Peek()
+		NextChar()
+		c = Peek()
 	}
 }
 

@@ -1,4 +1,4 @@
-package template
+package _go
 
 // character reader
 type CharIterator interface {

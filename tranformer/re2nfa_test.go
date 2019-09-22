@@ -113,7 +113,7 @@ func TestToNFA(t *testing.T) {
 		t.Errorf("toNFA().ToDFA().Match() expected %t. got %t", true, false)
 	}
 
-	re, err = reparser.Parse("/\\*(^[\\*]*\\*^[/])*^[\\*]*\\*/")
+	re, err = reparser.Parse("/\\*([^\\*]*\\*[^/])*[^\\*]*\\*/")
 	if err != nil {
 		t.Fatal(err)
 	}

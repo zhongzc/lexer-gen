@@ -36,7 +36,7 @@ func TestEscCharset(t *testing.T) {
 }
 
 func TestExcludeCharset(t *testing.T) {
-	r, err := Parse("^[a-c1-4_]")
+	r, err := Parse("[^a-c1-4_]")
 	if err != nil {
 		t.Fatalf("reparser.Parse() failed: %s", err.Error())
 	}

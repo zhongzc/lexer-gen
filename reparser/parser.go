@@ -5,7 +5,7 @@ import (
 	"fmt"
 	. "github.com/zhongzc/lexerGen/reast"
 	"sort"
-	"unicode"
+	"unicode/utf8"
 )
 
 type Parser struct {
@@ -196,7 +196,7 @@ func (p *Parser) negated() (res RegEx, err error) {
 		To   rune
 	}
 	cs := make(map[charset]bool)
-	cs[charset{1, unicode.MaxRune}] = true
+	cs[charset{1, utf8.MaxRune}] = true
 	for ; p.peek() != ']'; {
 		var f rune
 		var t rune

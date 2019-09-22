@@ -1,4 +1,4 @@
-package template
+package _go
 
 import (
 	"errors"
@@ -20,7 +20,7 @@ func (a *DOG) RunGreedy(iter CharIterator) error {
 		8: true,
 	}
 
-	c := iter.Peek()
+	c := Peek()
 outer:
 	for {
 		switch currentState {
@@ -107,8 +107,8 @@ outer:
 		default:
 			break outer
 		}
-		iter.NextChar()
-		c = iter.Peek()
+		NextChar()
+		c = Peek()
 	}
 
 	if acceptState[currentState] {

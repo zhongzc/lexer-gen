@@ -1,4 +1,4 @@
-package template
+package _go
 
 import (
 	"testing"

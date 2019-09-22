@@ -1,7 +1,7 @@
 package codegen
 
 import (
-	"github.com/zhongzc/lexerGen/fa/dfa"
+	"github.com/zhongzc/lexerGen/fa"
 	"io"
 	"os"
 	"path/filepath"
@@ -32,6 +32,11 @@ func Gen(g Generator, path string, dfas []*NamedDFA) (err error) {
 }
 
 type NamedDFA struct {
-	Name string
-	DFA  *dfa.DFA
+	Name         string
+	StartState   int
+	AcceptStates fa.StateSet
+	Rules        map[int][]struct {
+		By fa.Charset
+		To int
+	}
 }
