@@ -10,7 +10,8 @@ import (
 func main() {
 	f := flag.String("i", "", "the input rule file")
 	p := flag.String("o", "lexer", "the output path")
-	n := flag.String("go", "", "generate golang code, need specify package name")
+	goo := flag.String("go", "", "generate golang code, need specify package name")
+	cpp := flag.Bool("cpp", false, "generate c++11 code")
 	flag.Parse()
 
 	if *f == "" {
@@ -23,8 +24,11 @@ func main() {
 	defer file.Close()
 
 	var g codegen.Generator
-	if *n != "" {
-		g = codegen.NewGoGen(*n)
+	if *goo != "" {
+		g = codegen.NewGoGen(*goo)
+	}
+	if *cpp {
+		g = codegen.NewCppGen()
 	}
 	if g == nil {
 		panic("should specify a code generator")

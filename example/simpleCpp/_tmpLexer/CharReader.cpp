@@ -12,14 +12,14 @@ CharReader::CharReader(const std::string& s) {
 }
 
 char32_t CharReader::peek() {
-    if (this->cur == this->end) {
+    if (this->cur > this->end) {
         return 0;
     }
     return *this->cur;
 }
 
 char32_t CharReader::nextChar() {
-    if (this->cur == this->end) {
+    if (this->cur > this->end) {
         return 0;
     }
     auto c = *this->cur;

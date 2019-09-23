@@ -1,0 +1,15 @@
+IF        if
+ELSE      else
+LPAREN    \(
+RPAREN    \)
+LBRACKET  {
+RBRACKET  }
+SEMICOLON ;
+VAR       var
+RETURN    return
+EQ        ==
+ASSIGN    =
+NUM       0|[1-9][0-9]*
+IDENT     [A-Za-z_][A-Za-z0-9_]*
+MCOMMENT  /\*([^\*]*\*[^/])*[^\*]*\*/
+SCOMMENT  //[^\n]*

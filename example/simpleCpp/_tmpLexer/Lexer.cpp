@@ -5,9 +5,21 @@
 #include <memory>
 
 Lexer::Lexer(CharReader &charReader) : charReader(charReader) {
+    this->automatas.push_back(std::unique_ptr<Automata>(new IF));
+    this->automatas.push_back(std::unique_ptr<Automata>(new ELSE));
+    this->automatas.push_back(std::unique_ptr<Automata>(new LPAREN));
+    this->automatas.push_back(std::unique_ptr<Automata>(new RPAREN));
+    this->automatas.push_back(std::unique_ptr<Automata>(new LBRACKET));
+    this->automatas.push_back(std::unique_ptr<Automata>(new RBRACKET));
+    this->automatas.push_back(std::unique_ptr<Automata>(new SEMICOLON));
+    this->automatas.push_back(std::unique_ptr<Automata>(new VAR));
+    this->automatas.push_back(std::unique_ptr<Automata>(new RETURN));
+    this->automatas.push_back(std::unique_ptr<Automata>(new EQ));
+    this->automatas.push_back(std::unique_ptr<Automata>(new ASSIGN));
     this->automatas.push_back(std::unique_ptr<Automata>(new NUM));
     this->automatas.push_back(std::unique_ptr<Automata>(new IDENT));
-    this->automatas.push_back(std::unique_ptr<Automata>(new COMMENT));
+    this->automatas.push_back(std::unique_ptr<Automata>(new MCOMMENT));
+    this->automatas.push_back(std::unique_ptr<Automata>(new SCOMMENT));
 
 }
 

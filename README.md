@@ -14,16 +14,18 @@ COMMENT /\*([^\*]*\*[^/])*[^\*]*\*/
 
 - Run the command line program `lexerGen`, in Windows, `lexerGen.exe`:
 ```shell
-./lexerGen -i=input.lx -o=lexer -go=lexer
+./lexerGen -i input.lx -o lexer -go lexer
 ```
 Usage of `./lexerGen`:
 ```text
+-cpp
+    generate c++11 code
+-go string
+    generate golang code, need specify package name
 -i string
     the input rule file
 -o string
     the output path (default "lexer")
--go string
-    generate golang code, need specify package name
 ```
 
 - Get the generated code from the specified path.
@@ -37,6 +39,11 @@ lexer
 ```
 
 ## Feature
+
+### v0.3
+
+- Support generating C++11 code.
+- Fix some bugs.
 
 ### v0.2
 
