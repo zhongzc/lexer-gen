@@ -12,6 +12,7 @@ type Automata interface {
 }
 
 type IF struct{}
+
 func (a *IF) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -51,6 +52,7 @@ outer:
 }
 
 type ELSE struct{}
+
 func (a *ELSE) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -61,6 +63,13 @@ func (a *ELSE) RunGreedy(iter CharIterator) error {
 outer:
 	for {
 		switch currentState {
+		case 0:
+			switch {
+			case c == 'e':
+				currentState = 1
+			default:
+				break outer
+			}
 		case 1:
 			switch {
 			case c == 'l':
@@ -82,13 +91,6 @@ outer:
 			default:
 				break outer
 			}
-		case 0:
-			switch {
-			case c == 'e':
-				currentState = 1
-			default:
-				break outer
-			}
 		default:
 			break outer
 		}
@@ -104,6 +106,7 @@ outer:
 }
 
 type LPAREN struct{}
+
 func (a *LPAREN) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -136,6 +139,7 @@ outer:
 }
 
 type RPAREN struct{}
+
 func (a *RPAREN) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -168,6 +172,7 @@ outer:
 }
 
 type LBRACKET struct{}
+
 func (a *LBRACKET) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -200,6 +205,7 @@ outer:
 }
 
 type RBRACKET struct{}
+
 func (a *RBRACKET) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -232,6 +238,7 @@ outer:
 }
 
 type SEMICOLON struct{}
+
 func (a *SEMICOLON) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -264,6 +271,7 @@ outer:
 }
 
 type VAR struct{}
+
 func (a *VAR) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -274,13 +282,6 @@ func (a *VAR) RunGreedy(iter CharIterator) error {
 outer:
 	for {
 		switch currentState {
-		case 0:
-			switch {
-			case c == 'v':
-				currentState = 1
-			default:
-				break outer
-			}
 		case 1:
 			switch {
 			case c == 'a':
@@ -292,6 +293,13 @@ outer:
 			switch {
 			case c == 'r':
 				currentState = 3
+			default:
+				break outer
+			}
+		case 0:
+			switch {
+			case c == 'v':
+				currentState = 1
 			default:
 				break outer
 			}
@@ -310,6 +318,7 @@ outer:
 }
 
 type RETURN struct{}
+
 func (a *RETURN) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -320,13 +329,6 @@ func (a *RETURN) RunGreedy(iter CharIterator) error {
 outer:
 	for {
 		switch currentState {
-		case 0:
-			switch {
-			case c == 'r':
-				currentState = 1
-			default:
-				break outer
-			}
 		case 1:
 			switch {
 			case c == 'e':
@@ -362,6 +364,13 @@ outer:
 			default:
 				break outer
 			}
+		case 0:
+			switch {
+			case c == 'r':
+				currentState = 1
+			default:
+				break outer
+			}
 		default:
 			break outer
 		}
@@ -377,6 +386,7 @@ outer:
 }
 
 type EQ struct{}
+
 func (a *EQ) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -416,6 +426,7 @@ outer:
 }
 
 type ASSIGN struct{}
+
 func (a *ASSIGN) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -448,18 +459,26 @@ outer:
 }
 
 type NUM struct{}
+
 func (a *NUM) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
+		3: true,
 		1: true,
 		2: true,
-		3: true,
 	}
 
 	c := iter.Peek()
 outer:
 	for {
 		switch currentState {
+		case 3:
+			switch {
+			case '0' <= c && c <= '9':
+				currentState = 3
+			default:
+				break outer
+			}
 		case 0:
 			switch {
 			case c == '0':
@@ -470,13 +489,6 @@ outer:
 				break outer
 			}
 		case 2:
-			switch {
-			case '0' <= c && c <= '9':
-				currentState = 3
-			default:
-				break outer
-			}
-		case 3:
 			switch {
 			case '0' <= c && c <= '9':
 				currentState = 3
@@ -498,121 +510,122 @@ outer:
 }
 
 type IDENT struct{}
+
 func (a *IDENT) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
-		1: true,
 		2: true,
 		3: true,
 		4: true,
 		5: true,
 		6: true,
 		7: true,
+		1: true,
 	}
 
 	c := iter.Peek()
 outer:
 	for {
 		switch currentState {
-		case 1:
-			switch {
-			case 'a' <= c && c <= 'z':
-				currentState = 5
-			case 'A' <= c && c <= 'Z':
-				currentState = 4
-			case c == '_':
-				currentState = 6
-			case '0' <= c && c <= '9':
-				currentState = 7
-			default:
-				break outer
-			}
-		case 4:
-			switch {
-			case 'a' <= c && c <= 'z':
-				currentState = 5
-			case 'A' <= c && c <= 'Z':
-				currentState = 4
-			case c == '_':
-				currentState = 6
-			case '0' <= c && c <= '9':
-				currentState = 7
-			default:
-				break outer
-			}
-		case 3:
-			switch {
-			case '0' <= c && c <= '9':
-				currentState = 7
-			case 'a' <= c && c <= 'z':
-				currentState = 5
-			case c == '_':
-				currentState = 6
-			case 'A' <= c && c <= 'Z':
-				currentState = 4
-			default:
-				break outer
-			}
-		case 2:
-			switch {
-			case '0' <= c && c <= '9':
-				currentState = 7
-			case 'a' <= c && c <= 'z':
-				currentState = 5
-			case 'A' <= c && c <= 'Z':
-				currentState = 4
-			case c == '_':
-				currentState = 6
-			default:
-				break outer
-			}
 		case 5:
 			switch {
 			case '0' <= c && c <= '9':
-				currentState = 7
-			case 'A' <= c && c <= 'Z':
-				currentState = 4
-			case c == '_':
 				currentState = 6
-			case 'a' <= c && c <= 'z':
+			case c == '_':
 				currentState = 5
-			default:
-				break outer
-			}
-		case 6:
-			switch {
-			case 'a' <= c && c <= 'z':
-				currentState = 5
-			case '0' <= c && c <= '9':
+			case 'A' <= c && c <= 'Z':
 				currentState = 7
-			case c == '_':
-				currentState = 6
-			case 'A' <= c && c <= 'Z':
-				currentState = 4
-			default:
-				break outer
-			}
-		case 0:
-			switch {
-			case c == '_':
-				currentState = 3
 			case 'a' <= c && c <= 'z':
-				currentState = 2
-			case 'A' <= c && c <= 'Z':
-				currentState = 1
+				currentState = 4
 			default:
 				break outer
 			}
 		case 7:
 			switch {
-			case 'a' <= c && c <= 'z':
-				currentState = 5
+			case '0' <= c && c <= '9':
+				currentState = 6
 			case 'A' <= c && c <= 'Z':
+				currentState = 7
+			case 'a' <= c && c <= 'z':
 				currentState = 4
 			case c == '_':
-				currentState = 6
+				currentState = 5
+			default:
+				break outer
+			}
+		case 1:
+			switch {
 			case '0' <= c && c <= '9':
+				currentState = 6
+			case 'a' <= c && c <= 'z':
+				currentState = 4
+			case 'A' <= c && c <= 'Z':
 				currentState = 7
+			case c == '_':
+				currentState = 5
+			default:
+				break outer
+			}
+		case 2:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 7
+			case c == '_':
+				currentState = 5
+			case '0' <= c && c <= '9':
+				currentState = 6
+			case 'a' <= c && c <= 'z':
+				currentState = 4
+			default:
+				break outer
+			}
+		case 3:
+			switch {
+			case 'a' <= c && c <= 'z':
+				currentState = 4
+			case '0' <= c && c <= '9':
+				currentState = 6
+			case c == '_':
+				currentState = 5
+			case 'A' <= c && c <= 'Z':
+				currentState = 7
+			default:
+				break outer
+			}
+		case 6:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 7
+			case 'a' <= c && c <= 'z':
+				currentState = 4
+			case '0' <= c && c <= '9':
+				currentState = 6
+			case c == '_':
+				currentState = 5
+			default:
+				break outer
+			}
+		case 0:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 2
+			case c == '_':
+				currentState = 1
+			case 'a' <= c && c <= 'z':
+				currentState = 3
+			default:
+				break outer
+			}
+		case 4:
+			switch {
+			case 'A' <= c && c <= 'Z':
+				currentState = 7
+			case c == '_':
+				currentState = 5
+			case 'a' <= c && c <= 'z':
+				currentState = 4
+			case '0' <= c && c <= '9':
+				currentState = 6
 			default:
 				break outer
 			}
@@ -631,6 +644,7 @@ outer:
 }
 
 type MCOMMENT struct{}
+
 func (a *MCOMMENT) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
@@ -643,41 +657,12 @@ outer:
 		switch currentState {
 		case 8:
 			switch {
+			case '+' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case c == '*':
+				currentState = 4
 			case '\x01' <= c && c <= ')':
 				currentState = 5
-			case c == '*':
-				currentState = 3
-			case '+' <= c && c <= '\U0010ffff':
-				currentState = 4
-			default:
-				break outer
-			}
-		case 5:
-			switch {
-			case '\x01' <= c && c <= ')':
-				currentState = 5
-			case '+' <= c && c <= '\U0010ffff':
-				currentState = 4
-			case c == '*':
-				currentState = 3
-			default:
-				break outer
-			}
-		case 1:
-			switch {
-			case c == '*':
-				currentState = 2
-			default:
-				break outer
-			}
-		case 3:
-			switch {
-			case '\x01' <= c && c <= '.':
-				currentState = 7
-			case c == '/':
-				currentState = 6
-			case '0' <= c && c <= '\U0010ffff':
-				currentState = 8
 			default:
 				break outer
 			}
@@ -690,34 +675,63 @@ outer:
 			}
 		case 2:
 			switch {
-			case c == '*':
-				currentState = 3
 			case '+' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case c == '*':
 				currentState = 4
 			case '\x01' <= c && c <= ')':
 				currentState = 5
+			default:
+				break outer
+			}
+		case 5:
+			switch {
+			case '+' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case '\x01' <= c && c <= ')':
+				currentState = 5
+			case c == '*':
+				currentState = 4
+			default:
+				break outer
+			}
+		case 1:
+			switch {
+			case c == '*':
+				currentState = 2
 			default:
 				break outer
 			}
 		case 4:
 			switch {
-			case '+' <= c && c <= '\U0010ffff':
-				currentState = 4
-			case c == '*':
-				currentState = 3
-			case '\x01' <= c && c <= ')':
-				currentState = 5
+			case '\x01' <= c && c <= '.':
+				currentState = 8
+			case c == '/':
+				currentState = 6
+			case '0' <= c && c <= '\U0010ffff':
+				currentState = 7
 			default:
 				break outer
 			}
 		case 7:
 			switch {
-			case '+' <= c && c <= '\U0010ffff':
+			case c == '*':
 				currentState = 4
 			case '\x01' <= c && c <= ')':
 				currentState = 5
-			case c == '*':
+			case '+' <= c && c <= '\U0010ffff':
 				currentState = 3
+			default:
+				break outer
+			}
+		case 3:
+			switch {
+			case c == '*':
+				currentState = 4
+			case '+' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case '\x01' <= c && c <= ')':
+				currentState = 5
 			default:
 				break outer
 			}
@@ -736,45 +750,19 @@ outer:
 }
 
 type SCOMMENT struct{}
+
 func (a *SCOMMENT) RunGreedy(iter CharIterator) error {
 	currentState := 0
 	acceptState := map[int]bool{
-		4: true,
 		2: true,
 		3: true,
+		4: true,
 	}
 
 	c := iter.Peek()
 outer:
 	for {
 		switch currentState {
-		case 2:
-			switch {
-			case '\v' <= c && c <= '\U0010ffff':
-				currentState = 3
-			case '\x01' <= c && c <= '\t':
-				currentState = 4
-			default:
-				break outer
-			}
-		case 3:
-			switch {
-			case '\v' <= c && c <= '\U0010ffff':
-				currentState = 3
-			case '\x01' <= c && c <= '\t':
-				currentState = 4
-			default:
-				break outer
-			}
-		case 4:
-			switch {
-			case '\v' <= c && c <= '\U0010ffff':
-				currentState = 3
-			case '\x01' <= c && c <= '\t':
-				currentState = 4
-			default:
-				break outer
-			}
 		case 0:
 			switch {
 			case c == '/':
@@ -786,6 +774,33 @@ outer:
 			switch {
 			case c == '/':
 				currentState = 2
+			default:
+				break outer
+			}
+		case 2:
+			switch {
+			case '\v' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case '\x01' <= c && c <= '\t':
+				currentState = 4
+			default:
+				break outer
+			}
+		case 3:
+			switch {
+			case '\x01' <= c && c <= '\t':
+				currentState = 4
+			case '\v' <= c && c <= '\U0010ffff':
+				currentState = 3
+			default:
+				break outer
+			}
+		case 4:
+			switch {
+			case '\v' <= c && c <= '\U0010ffff':
+				currentState = 3
+			case '\x01' <= c && c <= '\t':
+				currentState = 4
 			default:
 				break outer
 			}

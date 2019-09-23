@@ -7,12 +7,12 @@ import (
 )
 
 func main() {
-	file, err := os.Open("example/tmp.lx")
+	file, err := os.Open("example/scutlab1/sample.lx")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
-	err = lexerGen.BuildAll(file, "example/_tmpLexer", codegen.NewGoGen("lexer"))
+	err = lexerGen.BuildAll(file, "example/scutlab1/sample/lexer", codegen.NewGoGen("lexer"))
 	if err != nil {
 		panic(err)
 	}

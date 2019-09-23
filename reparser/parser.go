@@ -89,7 +89,7 @@ func (p *Parser) factor() (RegEx, error) {
 		b = NewRepeat(b)
 	} else if p.peek() == '+' {
 		_ = p.eat('+')
-		b = NewChoose(b, NewRepeat(b))
+		b = NewSequence(b, NewRepeat(b))
 	}
 	return b, nil
 }
@@ -154,7 +154,7 @@ func (p *Parser) base() (RegEx, error) {
 //             <primitive>                 <charsets> |
 //             <primitive>                            |
 func (p *Parser) charsets() (res RegEx, err error) {
-	for ; p.peek() != ']'; {
+	for p.peek() != ']' {
 		var f rune
 		var t rune
 
@@ -197,7 +197,7 @@ func (p *Parser) negated() (res RegEx, err error) {
 	}
 	cs := make(map[charset]bool)
 	cs[charset{1, utf8.MaxRune}] = true
-	for ; p.peek() != ']'; {
+	for p.peek() != ']' {
 		var f rune
 		var t rune
 

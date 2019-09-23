@@ -8,6 +8,10 @@ type CharIterator interface {
 	Peek() rune
 	SetIndex(i int)
 	SubString(l int, r int) []rune
+	Loc(idx int) struct {
+		Line int
+		Col  int
+	}
 }
 
 // Character reader implement
@@ -46,4 +50,24 @@ func (cs *CharStream) SetIndex(i int) {
 
 func (cs *CharStream) SubString(from int, limit int) []rune {
 	return cs.runes[from:limit]
+}
+
+func (cs *CharStream) Loc(idx int) struct {
+	Line int
+	Col  int
+} {
+	line := 1
+	col := 1
+	for i := 0; i <= idx; i++ {
+		if cs.runes[i] != '\n' {
+			col++
+		} else {
+			line++
+			col = 0
+		}
+	}
+	return struct {
+		Line int
+		Col  int
+	}{Line: line, Col: col}
 }

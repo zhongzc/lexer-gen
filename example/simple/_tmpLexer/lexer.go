@@ -3,14 +3,15 @@ package lexer
 
 import (
 	"errors"
+	"fmt"
 	"unicode"
 )
 
 // Lexer
 type Lexer struct {
 	Chars     CharIterator
-	automatas []struct{
-		Name string
+	automatas []struct {
+		Name     string
 		Automata Automata
 	}
 }
@@ -18,8 +19,8 @@ type Lexer struct {
 func NewLexer(chars CharIterator) *Lexer {
 	return &Lexer{
 		Chars: chars,
-		automatas: []struct{
-			Name string
+		automatas: []struct {
+			Name     string
 			Automata Automata
 		}{
 			{"IF", &IF{}},
@@ -58,13 +59,14 @@ func (l *Lexer) NextToken() (t *Token, err error) {
 
 			t = &Token{TokenType(a.Name), TokenValue(tv)}
 			err = nil
-			break
+			l.skipWhitespace()
+			return
 		}
 	}
 
-	l.skipWhitespace()
-
-	return
+	loc := l.Chars.Loc(idx)
+	msg := fmt.Sprintf("unexpected char: %c. at line %d, col %d", l.Chars.Peek(), loc.Line, loc.Col)
+	return nil, errors.New(msg)
 }
 
 func (l *Lexer) HasNext() bool {
