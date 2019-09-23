@@ -21,19 +21,19 @@ func NewLexer(chars CharIterator) *Lexer {
 }
 
 func (l *Lexer) NextToken() (t *Token, err error) {
-	if Peek() == 0 {
+	if l.Chars.Peek() == 0 {
 		return nil, errors.New("reach EOF")
 	}
 	l.skipWhitespace()
-	idx := CurrentIndex()
+	idx := l.Chars.CurrentIndex()
 
 	for k, a := range l.automatas {
-		err = RunGreedy(l.Chars)
+		err = a.RunGreedy(l.Chars)
 		if err != nil {
-			SetIndex(idx)
+			l.Chars.SetIndex(idx)
 		} else {
-			var tv = SubString(idx, CurrentIndex())
-			idx = CurrentIndex()
+			var tv = l.Chars.SubString(idx, l.Chars.CurrentIndex())
+			idx = l.Chars.CurrentIndex()
 
 			t = &Token{TokenType(k), TokenValue(tv)}
 			err = nil
@@ -47,14 +47,14 @@ func (l *Lexer) NextToken() (t *Token, err error) {
 }
 
 func (l *Lexer) HasNext() bool {
-	return Peek() != 0
+	return l.Chars.Peek() != 0
 }
 
 func (l *Lexer) skipWhitespace() {
-	c := Peek()
+	c := l.Chars.Peek()
 	for unicode.IsSpace(c) {
-		NextChar()
-		c = Peek()
+		l.Chars.NextChar()
+		c = l.Chars.Peek()
 	}
 }
 
