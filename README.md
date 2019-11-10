@@ -1,6 +1,6 @@
 # lexerGen
 
-**LexerGen** is a code generation tool that converts regular expression rules into Golang version of Lexer code. Also, with custom generation rules, users can customize the Go code that generates other languages, see: `codogen.Generator`.
+**LexerGen** is a code generation tool that converts regular expression rules into the Golang version of Lexer code. Also, with custom generation rules, users can customize the Go code that generates other languages, see: `codogen.Generator`.
 
 ## Usage
 
@@ -21,7 +21,7 @@ Usage of `./lexerGen`:
 -cpp
     generate c++11 code
 -go string
-    generate golang code, need specify package name
+    generate Golang code, need to specify the package name
 -i string
     the input rule file
 -o string
@@ -57,7 +57,7 @@ lexer
 - Can specify **multiple** regular expression rules for the lexer.
 - Support UTF-8.
 - The generated lexer has well-defined APIs.
-- The codebase is self-explanatory and organized to be learner friendly.
+- The codebase is self-explanatory and organized to be learner-friendly.
 - Easy to customize to generate codes for other languages.
 - Supported regular expression:
     - alternation
