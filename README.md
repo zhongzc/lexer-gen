@@ -1,4 +1,4 @@
-# lexerGen
+# LexerGen
 
 **LexerGen** is a code generation tool that converts regular expression rules into the Golang version of Lexer code. Also, with custom generation rules, users can customize the Go code that generates other languages, see: `codogen.Generator`.
 
